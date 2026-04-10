@@ -937,46 +937,6 @@ ${selectors.join(',\\n')} {
 }`;
 })()}
 
-${c.elementor ? `/* Elementor atomic containers: mobile compatibility */
-.${c.slug}-elementor-page {
-  overflow-x: hidden;
-}
-
-.${c.slug}-elementor-page .e-con {
-  max-width: 100%;
-}
-
-.${c.slug}-elementor-page .e-con > * {
-  min-width: 0;
-  max-width: 100%;
-}
-
-.${c.slug}-elementor-page .e-con img,
-.${c.slug}-elementor-page .e-con video,
-.${c.slug}-elementor-page .e-con iframe {
-  max-width: 100%;
-  height: auto;
-}
-
-@media (max-width: 767px) {
-  .${c.slug}-elementor-page .e-con.e-flex {
-    flex-wrap: var(--flex-wrap-mobile, wrap);
-  }
-
-  .${c.slug}-elementor-page .e-con.e-flex > .elementor-element,
-  .${c.slug}-elementor-page .e-con.e-flex > .e-con {
-    flex-basis: 100%;
-    max-width: 100%;
-  }
-
-  .${c.slug}-elementor-page .e-con[data-element_type="e-flexbox"],
-  .${c.slug}-elementor-page .e-con[data-element_type="e-div-block"] {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
-  }
-}` : ''}
-
 ${c.gutenberg ? `/* Gutenberg: full-width and wide block alignment */
 .entry-content > .alignwide {
   max-width: calc(var(--${c.slug}-max-width) + 200px);
