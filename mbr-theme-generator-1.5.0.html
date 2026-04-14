@@ -1,0 +1,5087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MBR Theme Generator v1.5.0</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface-raised: #222633;
+  --border: #2d3243;
+  --border-focus: #5b8af5;
+  --text: #e2e4ea;
+  --text-muted: #8b90a0;
+  --text-dim: #5d6178;
+  --accent: #5b8af5;
+  --accent-soft: rgba(91, 138, 245, 0.12);
+  --accent-hover: #7ba3ff;
+  --green: #4ade80;
+  --green-soft: rgba(74, 222, 128, 0.1);
+  --orange: #fb923c;
+  --orange-soft: rgba(251, 146, 60, 0.1);
+  --red: #f87171;
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.generator {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+/* Header */
+.gen-header {
+  text-align: center;
+  padding: 40px 0 32px;
+}
+
+.gen-header .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.gen-header .logo-icon {
+  width: 44px;
+  height: 44px;
+  background: var(--accent);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+.gen-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+
+.gen-header p {
+  color: var(--text-muted);
+  font-size: 15px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.security-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 6px 14px;
+  background: var(--green-soft);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--green);
+}
+
+.security-badge svg { flex-shrink: 0; }
+
+/* Sections */
+.gen-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.gen-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+.gen-section-header:hover {
+  background: var(--surface-raised);
+}
+
+.gen-section-header h2 {
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chevron {
+  width: 20px;
+  height: 20px;
+  color: var(--text-dim);
+  transition: transform 0.25s ease;
+}
+
+.gen-section.open .chevron { transform: rotate(180deg); }
+
+.gen-section-body {
+  display: none;
+  padding: 0 22px 22px;
+}
+
+.gen-section.open .gen-section-body { display: block; }
+
+/* Form Elements */
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.field-row.single { grid-template-columns: 1fr; }
+
+.field-group { display: flex; flex-direction: column; gap: 5px; }
+
+.field-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.field-group input,
+.field-group select,
+.field-group textarea {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color 0.2s;
+  outline: none;
+  width: 100%;
+}
+
+.field-group input:focus,
+.field-group select:focus,
+.field-group textarea:focus {
+  border-color: var(--border-focus);
+}
+
+.field-group textarea { resize: vertical; min-height: 70px; }
+
+.field-group .hint {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Radio Cards */
+.type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.type-card {
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.type-card:hover { border-color: var(--text-dim); }
+
+.type-card.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.type-card input { display: none; }
+
+.type-card .card-icon {
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+
+.type-card h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.type-card p {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Toggle Switches */
+.toggle-list { display: flex; flex-direction: column; gap: 8px; }
+
+.toggle-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.toggle-item:hover { border-color: var(--text-dim); }
+
+.toggle-info { flex: 1; }
+
+.toggle-info .toggle-label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.toggle-info .toggle-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.toggle-switch {
+  width: 42px;
+  height: 24px;
+  background: var(--border);
+  border-radius: 12px;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: var(--text-muted);
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.toggle-item.active .toggle-switch {
+  background: var(--accent);
+}
+
+.toggle-item.active .toggle-switch::after {
+  left: 21px;
+  background: #fff;
+}
+
+/* Number Stepper */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  width: fit-content;
+}
+
+.stepper button {
+  width: 38px;
+  height: 38px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.stepper button:hover { background: var(--surface-raised); color: var(--text); }
+
+.stepper .stepper-val {
+  width: 44px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  padding: 8px 0;
+}
+
+/* Stepper Row */
+.stepper-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+
+.stepper-row-label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Security Panel */
+.security-panel {
+  background: var(--green-soft);
+  border: 1px solid rgba(74, 222, 128, 0.15);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+
+.security-panel h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--green);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.security-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 16px;
+}
+
+.security-list-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.security-list-item svg { color: var(--green); flex-shrink: 0; }
+
+/* Generate Button */
+.gen-actions {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.btn-generate {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 40px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: -0.2px;
+}
+
+.btn-generate:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.btn-generate:active { transform: translateY(0); }
+
+.btn-generate.generating {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.gen-footer {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.gen-footer a { color: var(--accent); text-decoration: none; }
+.gen-footer a:hover { text-decoration: underline; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .generator { padding: 16px 14px 40px; }
+  .gen-header { padding: 24px 0 20px; }
+  .gen-header h1 { font-size: 22px; }
+  .field-row { grid-template-columns: 1fr; }
+  .type-grid { grid-template-columns: 1fr; }
+  .security-list { grid-template-columns: 1fr; }
+  .gen-section-header { padding: 14px 16px; }
+  .gen-section-body { padding: 0 16px 16px; }
+  .btn-generate { width: 100%; justify-content: center; padding: 16px 24px; }
+}
+</style>
+</head>
+<body>
+
+<div class="generator">
+  <!-- Header -->
+  <div class="gen-header">
+    <div class="logo">
+      <div class="logo-icon">MBR</div>
+      <h1>Theme Generator</h1>
+    </div>
+    <p>Generate secure, production-ready WordPress themes in seconds. Every file built to 10/10 security standards.</p>
+    <div class="security-badge">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Security-First Output &bull; WordPress Coding Standards
+    </div>
+  </div>
+
+  <!-- Section 1: Theme Basics -->
+  <div class="gen-section open" data-section="basics">
+    <div class="gen-section-header" onclick="toggleSection(this)">
+      <h2><span class="section-num">1</span> Theme Basics</h2>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="gen-section-body">
+      <div class="field-row">
+        <div class="field-group">
+          <label>Theme Name *</label>
+          <input type="text" id="themeName" placeholder="My Starter Theme" oninput="autoSlug()">
+        </div>
+        <div class="field-group">
+          <label>Slug</label>
+          <input type="text" id="themeSlug" placeholder="my-starter-theme">
+          <span class="hint">Auto-generated from name</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Author *</label>
+          <input type="text" id="themeAuthor" placeholder="Your Name">
+        </div>
+        <div class="field-group">
+          <label>Author URI</label>
+          <input type="text" id="themeAuthorUri" placeholder="https://example.com">
+        </div>
+      </div>
+      <div class="field-row single">
+        <div class="field-group">
+          <label>Description</label>
+          <textarea id="themeDesc" placeholder="A secure, lightweight WordPress theme..."></textarea>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Version</label>
+          <input type="text" id="themeVersion" value="1.0.0">
+        </div>
+        <div class="field-group">
+          <label>License</label>
+          <select id="themeLicense">
+            <option value="GPL-2.0-or-later">GPL v2 or later</option>
+            <option value="GPL-3.0-or-later">GPL v3 or later</option>
+            <option value="MIT">MIT</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Minimum WP Version</label>
+          <input type="text" id="themeMinWP" value="6.0">
+        </div>
+        <div class="field-group">
+          <label>Minimum PHP Version</label>
+          <input type="text" id="themeMinPHP" value="7.4">
+        </div>
+      </div>
+      <div class="field-row single">
+        <div class="field-group">
+          <label>Tags</label>
+          <input type="text" id="themeTags" placeholder="custom-background, custom-logo, custom-menu">
+          <span class="hint">Comma-separated WordPress.org theme tags</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: Theme Type -->
+  <div class="gen-section open" data-section="type">
+    <div class="gen-section-header" onclick="toggleSection(this)">
+      <h2><span class="section-num">2</span> Theme Type</h2>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="gen-section-body">
+      <div class="type-grid">
+        <label class="type-card selected" onclick="selectType(this, 'minimal')">
+          <input type="radio" name="themeType" value="minimal" checked>
+          <div class="card-icon">&#9998;</div>
+          <h3>Minimal Blog</h3>
+          <p>Lean theme for blogs and simple sites. Posts, pages, comments.</p>
+        </label>
+        <label class="type-card" onclick="selectType(this, 'business')">
+          <input type="radio" name="themeType" value="business">
+          <div class="card-icon">&#9881;</div>
+          <h3>Business</h3>
+          <p>Front page template, hero sections, services, testimonials areas.</p>
+        </label>
+        <label class="type-card" onclick="selectType(this, 'portfolio')">
+          <input type="radio" name="themeType" value="portfolio">
+          <div class="card-icon">&#9635;</div>
+          <h3>Portfolio</h3>
+          <p>Project showcase with grid layouts, filterable galleries.</p>
+        </label>
+        <label class="type-card" onclick="selectType(this, 'woocommerce')">
+          <input type="radio" name="themeType" value="woocommerce">
+          <div class="card-icon">&#128722;</div>
+          <h3>WooCommerce</h3>
+          <p>E-commerce ready with shop templates, cart, checkout support.</p>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: Structure -->
+  <div class="gen-section" data-section="structure">
+    <div class="gen-section-header" onclick="toggleSection(this)">
+      <h2><span class="section-num">3</span> Structure</h2>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="gen-section-body">
+      <div class="stepper-row">
+        <span class="stepper-row-label">Navigation Menu Locations</span>
+        <div class="stepper">
+          <button onclick="stepVal('navMenus', -1)">&#8722;</button>
+          <div class="stepper-val" id="navMenus">2</div>
+          <button onclick="stepVal('navMenus', 1)">&#43;</button>
+        </div>
+      </div>
+      <div class="stepper-row">
+        <span class="stepper-row-label">Footer Widget Areas</span>
+        <div class="stepper">
+          <button onclick="stepVal('footerWidgets', -1)">&#8722;</button>
+          <div class="stepper-val" id="footerWidgets">3</div>
+          <button onclick="stepVal('footerWidgets', 1)">&#43;</button>
+        </div>
+      </div>
+      <div class="toggle-list" style="margin-top:8px;">
+        <div class="toggle-item active" onclick="toggleItem(this)" data-key="sidebar">
+          <div class="toggle-info"><div class="toggle-label">Sidebar</div><div class="toggle-desc">Include sidebar.php and widget area</div></div>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="toggle-item active" onclick="toggleItem(this)" data-key="customHeader">
+          <div class="toggle-info"><div class="toggle-label">Custom Header Template Part</div><div class="toggle-desc">Separate header into template-parts/header/</div></div>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="toggle-item active" onclick="toggleItem(this)" data-key="customFooter">
+          <div class="toggle-info"><div class="toggle-label">Custom Footer Template Part</div><div class="toggle-desc">Separate footer into template-parts/footer/</div></div>
+          <div class="toggle-switch"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 4: Features -->
+  <div class="gen-section" data-section="features">
+    <div class="gen-section-header" onclick="toggleSection(this)">
+      <h2><span class="section-num">4</span> Features</h2>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="gen-section-body">
+      <div class="toggle-list">
+        <div class="toggle-item" onclick="toggleItem(this)" data-key="cpt">
+          <div class="toggle-info"><div class="toggle-label">Custom Post Type Boilerplate</div><div class="toggle-desc">Registers a sample CPT with proper security</div></div>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="toggle-item" onclick="toggleItem(this)" data-key="taxonomy">
+          <div class="toggle-info"><div class="toggle-label">Custom Taxonomy Boilerplate</div><div class="toggle-desc">Registers a sample taxonomy with sanitisation</div></div>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="toggle-item active" onclick="toggleItem(this)" data-key="customizer">
+          <div class="toggle-info"><div class="toggle-label">Theme Customizer</div><div class="toggle-desc">Colour, typography and layout controls</div></div>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="toggle-item active" onclick="toggleItem(this)" data-key="blockEditor">
+          <div class="toggle-info"><div class="toggle-label">Block Editor Support</div><div class="toggle-desc">theme.json, block styles, editor stylesheet</div></div>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="toggle-item" onclick="toggleItem(this)" data-key="blockPatterns">
+          <div class="toggle-info"><div class="toggle-label">Starter Block Patterns</div><div class="toggle-desc">Reusable block patterns for common layouts</div></div>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="toggle-item active" onclick="toggleItem(this)" data-key="breadcrumbs">
+          <div class="toggle-info"><div class="toggle-label">Breadcrumbs</div><div class="toggle-desc">Lightweight breadcrumb navigation function</div></div>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="toggle-item" onclick="toggleItem(this)" data-key="headerBuilder">
+          <div class="toggle-info"><div class="toggle-label">Header &amp; Footer Builder</div><div class="toggle-desc">Customizer-driven header/footer with layout presets, sticky header, CTA button, back-to-top</div></div>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="toggle-item active" onclick="toggleItem(this)" data-key="pagination">
+          <div class="toggle-info"><div class="toggle-label">Pagination</div><div class="toggle-desc">Numbered pagination for archive pages</div></div>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="toggle-item active" onclick="toggleItem(this)" data-key="thumbnails">
+          <div class="toggle-info"><div class="toggle-label">Post Thumbnails</div><div class="toggle-desc">Featured images with custom size definitions</div></div>
+          <div class="toggle-switch"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 5: Page Builder Compatibility -->
+  <div class="gen-section" data-section="pagebuilder">
+    <div class="gen-section-header" onclick="toggleSection(this)">
+      <h2><span class="section-num">5</span> Page Builder Compatibility</h2>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="gen-section-body">
+      <div class="toggle-list">
+        <div class="toggle-item" onclick="toggleItem(this)" data-key="gutenberg">
+          <div class="toggle-info"><div class="toggle-label">Gutenberg (Block Editor)</div><div class="toggle-desc">Full-width and wide block alignment support, layout constraint removal</div></div>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="toggle-item" onclick="toggleItem(this)" data-key="elementor">
+          <div class="toggle-info"><div class="toggle-label">Elementor</div><div class="toggle-desc">Theme Builder locations, full-width/canvas templates, atomic elements (v4) support</div></div>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="toggle-item" onclick="toggleItem(this)" data-key="bricks">
+          <div class="toggle-info"><div class="toggle-label">Bricks Builder</div><div class="toggle-desc">Template rendering hooks, full-width/canvas templates</div></div>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="toggle-item" onclick="toggleItem(this)" data-key="oxygen">
+          <div class="toggle-info"><div class="toggle-label">Oxygen Builder</div><div class="toggle-desc">Full-takeover template support, style dequeue on Oxygen pages</div></div>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="toggle-item" onclick="toggleItem(this)" data-key="beaver">
+          <div class="toggle-info"><div class="toggle-label">Beaver Builder</div><div class="toggle-desc">Theme support declaration, full-width/canvas templates</div></div>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="toggle-item" onclick="toggleItem(this)" data-key="wpbakery">
+          <div class="toggle-info"><div class="toggle-label">WPBakery (Visual Composer)</div><div class="toggle-desc">Full-width template, content width adjustment, editor style support</div></div>
+          <div class="toggle-switch"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 6: Security (Always on) -->
+  <div class="gen-section open" data-section="security">
+    <div class="gen-section-header" onclick="toggleSection(this)">
+      <h2><span class="section-num">6</span> Security &amp; Standards</h2>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="gen-section-body">
+      <div class="security-panel">
+        <h3>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Always Enabled &mdash; Every Generated Theme Includes:
+        </h3>
+        <div class="security-list">
+          <div class="security-list-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Output escaping on every echo
+          </div>
+          <div class="security-list-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Nonce verification on forms
+          </div>
+          <div class="security-list-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Input sanitisation throughout
+          </div>
+          <div class="security-list-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Prepared SQL statements
+          </div>
+          <div class="security-list-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            ABSPATH checks on all files
+          </div>
+          <div class="security-list-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Enqueued assets only
+          </div>
+          <div class="security-list-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            No eval() or extract()
+          </div>
+          <div class="security-list-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            wp_kses for HTML output
+          </div>
+          <div class="security-list-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            CSRF protection
+          </div>
+          <div class="security-list-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Theme Check compliant
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate -->
+  <div class="gen-actions">
+    <button class="btn-generate" id="btnGenerate" onclick="generateTheme()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Generate &amp; Download Theme
+    </button>
+  </div>
+
+  <div class="gen-footer">
+    Built by <a href="https://littlewebshack.com" target="_blank">Robert Palmer</a> &bull; Security-First WordPress Themes
+  </div>
+</div>
+
+<script>
+// --- UI Functions ---
+function toggleSection(header) {
+  header.parentElement.classList.toggle('open');
+}
+
+function autoSlug() {
+  const name = document.getElementById('themeName').value;
+  document.getElementById('themeSlug').value = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function selectType(card, type) {
+  document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  card.querySelector('input').checked = true;
+}
+
+function toggleItem(el) {
+  el.classList.toggle('active');
+}
+
+function stepVal(id, delta) {
+  const el = document.getElementById(id);
+  let v = parseInt(el.textContent) + delta;
+  if (v < 0) v = 0;
+  if (v > 10) v = 10;
+  el.textContent = v;
+}
+
+// --- Gather Config ---
+function getConfig() {
+  const slug = document.getElementById('themeSlug').value || 'my-theme';
+  const prefix = slug.replace(/-/g, '_');
+  const cfg = {
+    name: document.getElementById('themeName').value || 'My Theme',
+    slug: slug,
+    prefix: prefix,
+    prefixUpper: prefix.toUpperCase(),
+    author: document.getElementById('themeAuthor').value || 'Developer',
+    authorUri: document.getElementById('themeAuthorUri').value || '',
+    description: document.getElementById('themeDesc').value || 'A secure WordPress theme.',
+    version: document.getElementById('themeVersion').value || '1.0.0',
+    license: document.getElementById('themeLicense').value,
+    minWP: document.getElementById('themeMinWP').value || '6.0',
+    minPHP: document.getElementById('themeMinPHP').value || '7.4',
+    tags: document.getElementById('themeTags').value || '',
+    type: document.querySelector('input[name="themeType"]:checked').value,
+    navMenus: parseInt(document.getElementById('navMenus').textContent),
+    footerWidgets: parseInt(document.getElementById('footerWidgets').textContent),
+    sidebar: isActive('sidebar'),
+    customHeader: isActive('customHeader'),
+    customFooter: isActive('customFooter'),
+    cpt: isActive('cpt'),
+    taxonomy: isActive('taxonomy'),
+    customizer: isActive('customizer'),
+    blockEditor: isActive('blockEditor'),
+    blockPatterns: isActive('blockPatterns'),
+    breadcrumbs: isActive('breadcrumbs'),
+    headerBuilder: isActive('headerBuilder'),
+    pagination: isActive('pagination'),
+    thumbnails: isActive('thumbnails'),
+    elementor: isActive('elementor'),
+    gutenberg: isActive('gutenberg'),
+    bricks: isActive('bricks'),
+    oxygen: isActive('oxygen'),
+    beaver: isActive('beaver'),
+    wpbakery: isActive('wpbakery'),
+  };
+
+  // Header builder requires the customizer and at least 2 nav menus.
+  if (cfg.headerBuilder) {
+    cfg.customizer = true;
+    if (cfg.navMenus < 2) cfg.navMenus = 2;
+  }
+
+  return cfg;
+}
+
+function isActive(key) {
+  const el = document.querySelector(`[data-key="${key}"]`);
+  return el ? el.classList.contains('active') : false;
+}
+
+// --- File Generators ---
+
+function genStyleCSS(c) {
+  return `/*
+Theme Name: ${c.name}
+Theme URI: ${c.authorUri}
+Author: ${c.author}
+Author URI: ${c.authorUri}
+Description: ${c.description}
+Version: ${c.version}
+Requires at least: ${c.minWP}
+Requires PHP: ${c.minPHP}
+License: ${c.license}
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: ${c.slug}
+Tags: ${c.tags}
+*/
+
+/* ==========================================================================
+   Base Styles
+   ========================================================================== */
+
+:root {
+  --${c.slug}-primary: #2563eb;
+  --${c.slug}-secondary: #475569;
+  --${c.slug}-text: #1e293b;
+  --${c.slug}-bg: #ffffff;
+  --${c.slug}-border: #e2e8f0;
+  --${c.slug}-max-width: 1200px;
+}
+
+/* Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--${c.slug}-text);
+  background: var(--${c.slug}-bg);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: var(--${c.slug}-primary);
+  text-decoration: none;
+}
+
+a:hover,
+a:focus {
+  text-decoration: underline;
+}
+
+/* Layout */
+.site {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.site-content {
+  flex: 1;
+  width: 100%;
+  max-width: var(--${c.slug}-max-width);
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+${(() => {
+  const selectors = [];
+  if (c.elementor) selectors.push(`.${c.slug}-elementor-page .site-content`);
+  if (c.bricks) selectors.push(`.${c.slug}-bricks-page .site-content`);
+  if (c.oxygen) selectors.push(`.oxygen-body .site-content`);
+  if (c.beaver) selectors.push(`.fl-builder .site-content`);
+  if (c.wpbakery) selectors.push(`.${c.slug}-wpbakery-page .site-content`);
+  if (selectors.length === 0) return '';
+  return `/* Page builder pages: let the builder control layout */
+${selectors.join(',\\n')} {
+  max-width: none;
+  padding: 0;
+}`;
+})()}
+
+${c.gutenberg ? `/* Gutenberg: full-width and wide block alignment */
+.entry-content > .alignwide {
+  max-width: calc(var(--${c.slug}-max-width) + 200px);
+  margin-left: calc(50% - ((var(--${c.slug}-max-width) + 200px) / 2));
+  margin-right: calc(50% - ((var(--${c.slug}-max-width) + 200px) / 2));
+  width: auto;
+}
+
+.entry-content > .alignfull {
+  max-width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  width: 100vw;
+}
+
+.entry-content > .alignleft {
+  float: left;
+  margin-right: 2rem;
+  margin-bottom: 1rem;
+  max-width: 50%;
+}
+
+.entry-content > .alignright {
+  float: right;
+  margin-left: 2rem;
+  margin-bottom: 1rem;
+  max-width: 50%;
+}
+
+.entry-content > .aligncenter {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.wp-block-separator.is-style-wide {
+  max-width: none;
+}` : ''}
+
+${c.sidebar ? `.content-area {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.primary {
+  flex: 1;
+  min-width: 0;
+}
+
+.widget-area {
+  width: 300px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .widget-area {
+    width: 100%;
+  }
+}` : ''}
+
+/* Header */
+.site-header {
+  background: var(--${c.slug}-bg);
+  border-bottom: 1px solid var(--${c.slug}-border);
+  padding: 1rem;
+}
+
+.site-header .wrap {
+  max-width: var(--${c.slug}-max-width);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.site-branding .site-title {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.site-branding .site-title a {
+  color: var(--${c.slug}-text);
+}
+
+/* Navigation */
+.main-navigation ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.main-navigation a {
+  color: var(--${c.slug}-secondary);
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.main-navigation a:hover {
+  color: var(--${c.slug}-primary);
+}
+
+/* Posts */
+.entry-header { margin-bottom: 1rem; }
+
+.entry-title {
+  font-size: 1.75rem;
+  line-height: 1.3;
+  margin: 0 0 0.5rem;
+}
+
+.entry-meta {
+  font-size: 0.875rem;
+  color: var(--${c.slug}-secondary);
+}
+
+.entry-content {
+  margin-bottom: 2rem;
+}
+
+.entry-content h2, .entry-content h3, .entry-content h4 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.entry-footer {
+  font-size: 0.875rem;
+  color: var(--${c.slug}-secondary);
+  padding-top: 1rem;
+  border-top: 1px solid var(--${c.slug}-border);
+}
+
+/* Footer */
+.site-footer {
+  background: var(--${c.slug}-text);
+  color: #94a3b8;
+  padding: 2rem 1rem;
+  margin-top: auto;
+}
+
+.site-footer .wrap {
+  max-width: var(--${c.slug}-max-width);
+  margin: 0 auto;
+}
+
+.footer-widgets {
+  display: grid;
+  grid-template-columns: repeat(${c.headerBuilder ? 3 : (c.footerWidgets || 3)}, 1fr);
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .footer-widgets {
+    grid-template-columns: 1fr;
+  }
+}
+
+.site-info {
+  text-align: center;
+  font-size: 0.875rem;
+  padding-top: 1rem;
+  border-top: 1px solid ${c.headerBuilder ? 'rgba(255, 255, 255, 0.1)' : '#334155'};
+}
+
+/* Accessibility */
+.screen-reader-text {
+  border: 0;
+  clip: rect(1px, 1px, 1px, 1px);
+  clip-path: inset(50%);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute !important;
+  width: 1px;
+  word-wrap: normal !important;
+}
+
+.screen-reader-text:focus {
+  background: #f1f1f1;
+  clip: auto !important;
+  clip-path: none;
+  color: #21759b;
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 700;
+  height: auto;
+  left: 5px;
+  line-height: normal;
+  padding: 15px 23px 14px;
+  text-decoration: none;
+  top: 5px;
+  width: auto;
+  z-index: 100000;
+}
+
+/* Skip link */
+.skip-link:focus {
+  background: var(--${c.slug}-primary);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100000;
+}
+`;
+}
+
+function genFunctionsPHP(c) {
+  let code = `<?php
+/**
+ * ${c.name} functions and definitions.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+/**
+ * Define theme constants.
+ */
+define( '${c.prefixUpper}_VERSION', '${c.version}' );
+define( '${c.prefixUpper}_DIR', get_template_directory() );
+define( '${c.prefixUpper}_URI', get_template_directory_uri() );
+
+/**
+ * Theme setup.
+ */
+function ${c.prefix}_setup() {
+\t// Make theme available for translation.
+\tload_theme_textdomain( '${c.slug}', ${c.prefixUpper}_DIR . '/languages' );
+
+\t// Add default posts and comments RSS feed links to head.
+\tadd_theme_support( 'automatic-feed-links' );
+
+\t// Let WordPress manage the document title.
+\tadd_theme_support( 'title-tag' );
+
+\t// Enable custom logo.
+\tadd_theme_support( 'custom-logo', array(
+\t\t'height'      => 80,
+\t\t'width'       => 250,
+\t\t'flex-height' => true,
+\t\t'flex-width'  => true,
+\t) );
+`;
+
+  if (c.thumbnails) {
+    code += `
+\t// Enable featured images.
+\tadd_theme_support( 'post-thumbnails' );
+\tset_post_thumbnail_size( 1200, 9999 );
+\tadd_image_size( '${c.slug}-featured', 800, 450, true );
+\tadd_image_size( '${c.slug}-thumbnail', 400, 300, true );
+`;
+  }
+
+  code += `
+\t// HTML5 support.
+\tadd_theme_support( 'html5', array(
+\t\t'search-form',
+\t\t'comment-form',
+\t\t'comment-list',
+\t\t'gallery',
+\t\t'caption',
+\t\t'style',
+\t\t'script',
+\t) );
+
+\t// Add support for responsive embeds.
+\tadd_theme_support( 'responsive-embeds' );
+
+\t// Add support for custom background.
+\tadd_theme_support( 'custom-background', array(
+\t\t'default-color' => 'ffffff',
+\t) );
+`;
+
+  if (c.blockEditor) {
+    code += `
+\t// Block editor support.
+\tadd_theme_support( 'wp-block-styles' );
+\tadd_theme_support( 'align-wide' );
+\tadd_theme_support( 'editor-styles' );
+\tadd_editor_style( 'assets/css/editor-style.css' );
+`;
+  }
+
+  // Nav menus
+  code += `
+\t// Register navigation menus.
+\tregister_nav_menus( array(\n`;
+  for (let i = 1; i <= c.navMenus; i++) {
+    const label = i === 1 ? 'Primary Menu' : i === 2 ? 'Footer Menu' : `Menu ${i}`;
+    code += `\t\t'${c.slug}-menu-${i}' => esc_html__( '${label}', '${c.slug}' ),\n`;
+  }
+  code += `\t) );
+}
+add_action( 'after_setup_theme', '${c.prefix}_setup' );
+
+/**
+ * Set the content width in pixels.
+ */
+function ${c.prefix}_content_width() {
+\t$GLOBALS['content_width'] = apply_filters( '${c.prefix}_content_width', 1200 );
+}
+add_action( 'after_setup_theme', '${c.prefix}_content_width', 0 );
+`;
+
+  // Widget areas
+  code += `
+/**
+ * Register widget areas.
+ */
+function ${c.prefix}_widgets_init() {
+`;
+  if (c.sidebar) {
+    code += `\tregister_sidebar( array(
+\t\t'name'          => esc_html__( 'Sidebar', '${c.slug}' ),
+\t\t'id'            => '${c.slug}-sidebar',
+\t\t'description'   => esc_html__( 'Add widgets here.', '${c.slug}' ),
+\t\t'before_widget' => '<section id="%1$s" class="widget %2$s">',
+\t\t'after_widget'  => '</section>',
+\t\t'before_title'  => '<h2 class="widget-title">',
+\t\t'after_title'   => '</h2>',
+\t) );
+`;
+  }
+  for (let i = 1; i <= (c.headerBuilder ? 4 : c.footerWidgets); i++) {
+    code += `
+\tregister_sidebar( array(
+\t\t'name'          => esc_html__( 'Footer ${i}', '${c.slug}' ),
+\t\t'id'            => '${c.slug}-footer-${i}',
+\t\t'description'   => esc_html__( 'Footer widget area ${i}.', '${c.slug}' ),
+\t\t'before_widget' => '<section id="%1$s" class="widget %2$s">',
+\t\t'after_widget'  => '</section>',
+\t\t'before_title'  => '<h2 class="widget-title">',
+\t\t'after_title'   => '</h2>',
+\t) );
+`;
+  }
+  code += `}
+add_action( 'widgets_init', '${c.prefix}_widgets_init' );
+`;
+
+  // Enqueue
+  code += `
+/**
+ * Enqueue scripts and styles.
+ */
+function ${c.prefix}_scripts() {
+\twp_enqueue_style(
+\t\t'${c.slug}-style',
+\t\tget_stylesheet_uri(),
+\t\tarray(),
+\t\t${c.prefixUpper}_VERSION
+\t);
+
+\twp_enqueue_style(
+\t\t'${c.slug}-main',
+\t\t${c.prefixUpper}_URI . '/assets/css/main.css',
+\t\tarray(),
+\t\t${c.prefixUpper}_VERSION
+\t);
+`;
+
+  if (!c.headerBuilder) {
+    code += `
+\twp_enqueue_script(
+\t\t'${c.slug}-navigation',
+\t\t${c.prefixUpper}_URI . '/assets/js/navigation.js',
+\t\tarray(),
+\t\t${c.prefixUpper}_VERSION,
+\t\ttrue
+\t);
+`;
+  }
+
+  code += `
+\tif ( is_singular() && comments_open() && get_option( 'thread_comments' ) ) {
+\t\twp_enqueue_script( 'comment-reply' );
+\t}
+}
+add_action( 'wp_enqueue_scripts', '${c.prefix}_scripts' );
+`;
+
+  // Header builder enqueues
+  if (c.headerBuilder) {
+    code += `
+/**
+ * Enqueue Header & Footer Builder assets.
+ */
+function ${c.prefix}_builder_scripts() {
+\twp_enqueue_style(
+\t\t'${c.slug}-header-builder',
+\t\t${c.prefixUpper}_URI . '/assets/css/header-builder.css',
+\t\tarray( '${c.slug}-style' ),
+\t\t${c.prefixUpper}_VERSION
+\t);
+
+\twp_enqueue_script(
+\t\t'${c.slug}-header-builder',
+\t\t${c.prefixUpper}_URI . '/assets/js/header-builder.js',
+\t\tarray(),
+\t\t${c.prefixUpper}_VERSION,
+\t\ttrue
+\t);
+}
+add_action( 'wp_enqueue_scripts', '${c.prefix}_builder_scripts' );
+`;
+  }
+
+  // Header builder helper functions
+  if (c.headerBuilder) {
+    code += `
+/**
+ * Return the header CSS class string.
+ *
+ * @return string
+ */
+function ${c.prefix}_header_class() {
+\t$layout  = get_theme_mod( '${c.prefix}_header_layout', 'logo-left' );
+\t$sticky  = get_theme_mod( '${c.prefix}_header_sticky', 'none' );
+\t$classes  = 'site-header';
+\t$classes .= ' header-layout-' . sanitize_html_class( $layout );
+\tif ( 'none' !== $sticky ) {
+\t\t$classes .= ' header-sticky';
+\t\t$classes .= ' header-sticky-' . sanitize_html_class( $sticky );
+\t}
+\tif ( 'none' !== $sticky && get_theme_mod( '${c.prefix}_header_sticky_shadow', true ) ) {
+\t\t$classes .= ' header-sticky-shadow';
+\t}
+\tif ( get_theme_mod( '${c.prefix}_header_transparent', false ) && is_front_page() ) {
+\t\t$classes .= ' header-transparent';
+\t}
+\treturn $classes;
+}
+
+/**
+ * Output header extras (search icon + CTA button).
+ */
+function ${c.prefix}_header_extras() {
+\t$show_search = get_theme_mod( '${c.prefix}_header_search', false );
+\t$show_cta    = get_theme_mod( '${c.prefix}_header_cta_enable', false );
+\t$cta_text    = get_theme_mod( '${c.prefix}_header_cta_text', 'Get Started' );
+\t$cta_url     = get_theme_mod( '${c.prefix}_header_cta_url', '#' );
+
+\techo '<div class="header-extras">';
+
+\tif ( $show_search ) {
+\t\techo '<button class="header-search-toggle" aria-label="' . esc_attr__( 'Toggle search', '${c.slug}' ) . '">';
+\t\techo '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>';
+\t\techo '</button>';
+\t}
+
+\tif ( $show_cta && $cta_text ) {
+\t\techo '<a href="' . esc_url( $cta_url ) . '" class="header-cta">' . esc_html( $cta_text ) . '</a>';
+\t}
+
+\techo '</div>';
+}
+
+/**
+ * Output expandable header search form.
+ */
+function ${c.prefix}_header_search_form() {
+\tif ( ! get_theme_mod( '${c.prefix}_header_search', false ) ) {
+\t\treturn;
+\t}
+\techo '<div class="header-search-form" aria-hidden="true"><div class="wrap">';
+\tget_search_form();
+\techo '</div></div>';
+}
+
+/**
+ * Output mobile menu panel (slide-in or fullscreen).
+ */
+function ${c.prefix}_mobile_menu_panel() {
+\t$style = get_theme_mod( '${c.prefix}_mobile_menu_style', 'dropdown' );
+\tif ( 'dropdown' === $style ) {
+\t\treturn;
+\t}
+\t$safe_style = esc_attr( $style );
+
+\techo '<div class="mobile-menu-overlay" aria-hidden="true"></div>';
+\techo '<div id="mobile-menu-panel" class="mobile-menu-panel mobile-menu-' . $safe_style . '" aria-hidden="true">';
+\techo '<div class="mobile-menu-panel-header">';
+\techo '<button class="mobile-menu-close" aria-label="' . esc_attr__( 'Close menu', '${c.slug}' ) . '">';
+\techo '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+\techo '</button>';
+\techo '</div>';
+\twp_nav_menu( array( 'theme_location' => '${c.slug}-menu-1', 'menu_id' => 'mobile-menu', 'container' => false, 'fallback_cb' => 'wp_page_menu', 'menu_class' => 'mobile-nav-list' ) );
+\techo '</div>';
+}
+`;
+  }
+
+  // Security headers
+  code += `
+/**
+ * Add security headers.
+ */
+function ${c.prefix}_security_headers() {
+\tif ( ! is_admin() ) {
+\t\theader( 'X-Content-Type-Options: nosniff' );
+\t\theader( 'X-Frame-Options: SAMEORIGIN' );
+\t\theader( 'Referrer-Policy: strict-origin-when-cross-origin' );
+\t}
+}
+add_action( 'send_headers', '${c.prefix}_security_headers' );
+
+/**
+ * Remove WordPress version from head and feeds.
+ */
+remove_action( 'wp_head', 'wp_generator' );
+
+/**
+ * Disable XML-RPC if not needed.
+ */
+add_filter( 'xmlrpc_enabled', '__return_false' );
+`;
+
+  // Includes
+  code += `
+/**
+ * Load required files.
+ */
+require ${c.prefixUpper}_DIR . '/inc/template-tags.php';
+`;
+  if (c.customizer) {
+    code += `require ${c.prefixUpper}_DIR . '/inc/customizer.php';\n`;
+  }
+  if (c.breadcrumbs) {
+    code += `require ${c.prefixUpper}_DIR . '/inc/breadcrumbs.php';\n`;
+  }
+  if (c.cpt) {
+    code += `require ${c.prefixUpper}_DIR . '/inc/custom-post-types.php';\n`;
+  }
+  if (c.taxonomy) {
+    code += `require ${c.prefixUpper}_DIR . '/inc/custom-taxonomies.php';\n`;
+  }
+  if (c.blockPatterns) {
+    code += `require ${c.prefixUpper}_DIR . '/inc/block-patterns.php';\n`;
+  }
+  if (c.type === 'woocommerce') {
+    code += `\nif ( class_exists( 'WooCommerce' ) ) {\n\trequire ${c.prefixUpper}_DIR . '/inc/woocommerce.php';\n}\n`;
+  }
+  if (c.gutenberg) {
+    code += `require ${c.prefixUpper}_DIR . '/inc/gutenberg.php';\n`;
+  }
+  if (c.elementor) {
+    code += `\nif ( defined( 'ELEMENTOR_VERSION' ) ) {\n\trequire ${c.prefixUpper}_DIR . '/inc/elementor.php';\n}\n`;
+  }
+  if (c.bricks) {
+    code += `\nif ( defined( 'BRICKS_VERSION' ) ) {\n\trequire ${c.prefixUpper}_DIR . '/inc/bricks.php';\n}\n`;
+  }
+  if (c.oxygen) {
+    code += `\nif ( defined( 'CT_VERSION' ) ) {\n\trequire ${c.prefixUpper}_DIR . '/inc/oxygen.php';\n}\n`;
+  }
+  if (c.beaver) {
+    code += `\nif ( class_exists( 'FLBuilder' ) ) {\n\trequire ${c.prefixUpper}_DIR . '/inc/beaver-builder.php';\n}\n`;
+  }
+  if (c.wpbakery) {
+    code += `\nif ( defined( 'WPB_VC_VERSION' ) ) {\n\trequire ${c.prefixUpper}_DIR . '/inc/wpbakery.php';\n}\n`;
+  }
+
+  return code;
+}
+
+function genGutenbergPHP(c) {
+  return `<?php
+/**
+ * Gutenberg (Block Editor) compatibility for ${c.name}.
+ *
+ * Ensures full-width and wide alignment blocks work correctly
+ * within the theme's content container. Also registers block
+ * style variations and provides editor width matching.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+/**
+ * Enqueue block editor assets.
+ *
+ * Adds a small stylesheet to the block editor so the editing
+ * canvas matches the front-end content width.
+ */
+function ${c.prefix}_gutenberg_editor_assets() {
+\twp_add_inline_style( 'wp-edit-blocks', '
+\t\t.editor-styles-wrapper {
+\t\t\tmax-width: ' . intval( $GLOBALS['content_width'] ?? 1200 ) . 'px;
+\t\t\tmargin: 0 auto;
+\t\t}
+\t\t.editor-styles-wrapper .block-editor-block-list__layout.is-root-container > .alignwide {
+\t\t\tmax-width: calc(' . intval( $GLOBALS['content_width'] ?? 1200 ) . 'px + 200px);
+\t\t}
+\t\t.editor-styles-wrapper .block-editor-block-list__layout.is-root-container > .alignfull {
+\t\t\tmax-width: none;
+\t\t}
+\t' );
+}
+add_action( 'enqueue_block_editor_assets', '${c.prefix}_gutenberg_editor_assets' );
+
+/**
+ * Register custom block style variations.
+ *
+ * Adds useful style variations to core blocks that complement
+ * the theme's design system.
+ */
+function ${c.prefix}_gutenberg_block_styles() {
+\tregister_block_style( 'core/group', array(
+\t\t'name'  => '${c.slug}-shadow',
+\t\t'label' => __( 'Shadow', '${c.slug}' ),
+\t\t'inline_style' => '.is-style-${c.slug}-shadow { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); border-radius: 4px; }',
+\t) );
+
+\tregister_block_style( 'core/image', array(
+\t\t'name'  => '${c.slug}-rounded',
+\t\t'label' => __( 'Rounded', '${c.slug}' ),
+\t\t'inline_style' => '.is-style-${c.slug}-rounded img { border-radius: 8px; }',
+\t) );
+}
+add_action( 'init', '${c.prefix}_gutenberg_block_styles' );
+
+/**
+ * Add body class on pages using the block editor.
+ *
+ * @param array $classes Existing body classes.
+ * @return array Modified body classes.
+ */
+function ${c.prefix}_gutenberg_body_classes( $classes ) {
+\tif ( is_singular() && has_blocks( get_the_ID() ) ) {
+\t\t$classes[] = '${c.slug}-has-blocks';
+\t}
+\treturn $classes;
+}
+add_filter( 'body_class', '${c.prefix}_gutenberg_body_classes' );
+`;
+}
+
+function genElementorPHP(c) {
+  return `<?php
+/**
+ * Elementor integration for ${c.name}.
+ *
+ * Provides Theme Builder location support, full-width and canvas page
+ * templates, and compatibility with Elementor 4.x atomic elements
+ * (e-heading, e-paragraph, e-button, e-image, e-divider, e-svg,
+ * e-youtube, e-self-hosted-video, e-flexbox, e-div-block, e-tabs).
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+/**
+ * Register Elementor theme locations for Theme Builder.
+ *
+ * Allows Elementor Pro users to assign custom headers, footers,
+ * single templates and archive templates via the Theme Builder.
+ */
+function ${c.prefix}_elementor_locations( $elementor_theme_manager ) {
+\t$elementor_theme_manager->register_all_core_location();
+}
+add_action( 'elementor/theme/register_locations', '${c.prefix}_elementor_locations' );
+
+/**
+ * Add Elementor support to the theme.
+ */
+function ${c.prefix}_elementor_setup() {
+\tadd_theme_support( 'header-footer-elementor' );
+}
+add_action( 'after_setup_theme', '${c.prefix}_elementor_setup' );
+
+/**
+ * Add Elementor-specific body class when a page is built with Elementor.
+ *
+ * @param array $classes Existing body classes.
+ * @return array Modified body classes.
+ */
+function ${c.prefix}_elementor_body_classes( $classes ) {
+\tif ( defined( 'ELEMENTOR_VERSION' ) && is_singular() ) {
+\t\tif ( \\Elementor\\Plugin::instance()->db->is_built_with_elementor( get_the_ID() ) ) {
+\t\t\t$classes[] = '${c.slug}-elementor-page';
+\t\t}
+\t}
+\treturn $classes;
+}
+add_filter( 'body_class', '${c.prefix}_elementor_body_classes' );
+
+/**
+ * Dequeue theme styles on Elementor Canvas template to prevent conflicts.
+ */
+function ${c.prefix}_elementor_dequeue_on_canvas() {
+\t$template = get_page_template_slug();
+\tif ( 'elementor_canvas' === $template || 'page-templates/template-canvas.php' === $template ) {
+\t\twp_dequeue_style( '${c.slug}-main' );
+\t}
+}
+add_action( 'wp_enqueue_scripts', '${c.prefix}_elementor_dequeue_on_canvas', 20 );
+
+/**
+ * Adjust content width for full-width and canvas page templates.
+ *
+ * This does NOT override content width on regular posts and pages
+ * where Elementor is used as the content editor within the theme layout.
+ */
+function ${c.prefix}_elementor_content_width() {
+\t$template = get_page_template_slug();
+\t$full_width_templates = array(
+\t\t'elementor_header_footer',
+\t\t'elementor_canvas',
+\t\t'page-templates/template-full-width.php',
+\t\t'page-templates/template-canvas.php',
+\t);
+
+\tif ( in_array( $template, $full_width_templates, true ) ) {
+\t\t$GLOBALS['content_width'] = apply_filters( '${c.prefix}_elementor_content_width', 100000 );
+\t}
+}
+add_action( 'template_redirect', '${c.prefix}_elementor_content_width' );
+
+/**
+ * Elementor 4.x Atomic Elements Compatibility.
+ *
+ * Atomic elements (e-heading, e-paragraph, e-button, e-image, e-divider,
+ * e-svg, e-youtube, e-self-hosted-video) and atomic containers (e-flexbox,
+ * e-div-block) use a class-based style system rather than inline styles.
+ *
+ * Theme compatibility approach:
+ * - Theme typography targets only theme-specific classes (.entry-title,
+ *   .entry-content, etc.), not bare elements inside Elementor containers.
+ * - Atomic widgets render without inner wrappers (no .elementor-widget-wrap).
+ * - Atomic styles use '.elementor .{className}' selectors which have higher
+ *   specificity than the theme's bare element selectors.
+ * - The theme intentionally does NOT add CSS overrides for Elementor —
+ *   the best compatibility is to stay out of Elementor's way.
+ */
+`;
+}
+
+function genFullWidthTemplate(c) {
+  return `<?php
+/**
+ * Template Name: Full Width
+ * Template Post Type: page
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+get_header(); ?>
+
+<main id="primary" class="site-content" role="main" style="max-width:none;padding-left:0;padding-right:0;">
+\t<?php
+\twhile ( have_posts() ) :
+\t\tthe_post();
+\t\tthe_content();
+\tendwhile;
+\t?>
+</main>
+
+<?php
+get_footer();
+`;
+}
+
+function genCanvasTemplate(c) {
+  return `<?php
+/**
+ * Template Name: Canvas
+ * Template Post Type: page
+ *
+ * A blank canvas template with no header, footer, or theme styles.
+ * Designed for use with Elementor and other page builders.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+?><!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+<head>
+\t<meta charset="<?php bloginfo( 'charset' ); ?>">
+\t<meta name="viewport" content="width=device-width, initial-scale=1.0">
+\t<?php wp_head(); ?>
+</head>
+
+<body <?php body_class(); ?>>
+<?php wp_body_open(); ?>
+
+<?php
+while ( have_posts() ) :
+\tthe_post();
+\tthe_content();
+endwhile;
+?>
+
+<?php wp_footer(); ?>
+</body>
+</html>
+`;
+}
+
+function genBricksPHP(c) {
+  return `<?php
+/**
+ * Bricks Builder integration for ${c.name}.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+/**
+ * Add Bricks theme support.
+ */
+function ${c.prefix}_bricks_setup() {
+\tadd_theme_support( 'bricks' );
+}
+add_action( 'after_setup_theme', '${c.prefix}_bricks_setup' );
+
+/**
+ * Let Bricks render its own templates when assigned.
+ *
+ * Bricks takes over entire template rendering via template_include.
+ * When a Bricks template is assigned, the theme steps aside completely.
+ *
+ * @param string $template The template file path.
+ * @return string Modified template path.
+ */
+function ${c.prefix}_bricks_template( $template ) {
+\tif ( function_exists( 'bricks_is_builder_main' ) && bricks_is_builder_main() ) {
+\t\treturn $template;
+\t}
+
+\tif ( function_exists( '\\Bricks\\Helpers::render_with_bricks' ) && \\Bricks\\Helpers::render_with_bricks() ) {
+\t\treturn BRICKS_PATH . 'template.php';
+\t}
+
+\treturn $template;
+}
+add_filter( 'template_include', '${c.prefix}_bricks_template', 99 );
+
+/**
+ * Add Bricks-specific body class on Bricks-rendered pages.
+ *
+ * @param array $classes Existing body classes.
+ * @return array Modified body classes.
+ */
+function ${c.prefix}_bricks_body_classes( $classes ) {
+\tif ( function_exists( '\\Bricks\\Helpers::render_with_bricks' ) && \\Bricks\\Helpers::render_with_bricks() ) {
+\t\t$classes[] = '${c.slug}-bricks-page';
+\t}
+\treturn $classes;
+}
+add_filter( 'body_class', '${c.prefix}_bricks_body_classes' );
+
+/**
+ * Dequeue theme styles on pages fully rendered by Bricks.
+ */
+function ${c.prefix}_bricks_dequeue_styles() {
+\tif ( function_exists( '\\Bricks\\Helpers::render_with_bricks' ) && \\Bricks\\Helpers::render_with_bricks() ) {
+\t\twp_dequeue_style( '${c.slug}-main' );
+\t}
+}
+add_action( 'wp_enqueue_scripts', '${c.prefix}_bricks_dequeue_styles', 20 );
+`;
+}
+
+function genOxygenPHP(c) {
+  return `<?php
+/**
+ * Oxygen Builder integration for ${c.name}.
+ *
+ * Oxygen fully takes over page rendering on pages it controls,
+ * outputting its own HTML and bypassing the theme template hierarchy.
+ * This integration ensures the theme stays out of Oxygen's way.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+/**
+ * Dequeue theme styles on Oxygen-rendered pages.
+ *
+ * Oxygen manages its own CSS entirely. Theme styles can cause
+ * conflicts with Oxygen's layout system.
+ */
+function ${c.prefix}_oxygen_dequeue_styles() {
+\tif ( ! function_exists( 'oxygen_vsb_current_user_can_full_access' ) ) {
+\t\treturn;
+\t}
+
+\t$post_id = get_the_ID();
+\tif ( ! $post_id ) {
+\t\treturn;
+\t}
+
+\t$shortcodes = get_post_meta( $post_id, 'ct_builder_shortcodes', true );
+\tif ( ! empty( $shortcodes ) ) {
+\t\twp_dequeue_style( '${c.slug}-main' );
+\t\twp_dequeue_style( '${c.slug}-style' );
+\t}
+}
+add_action( 'wp_enqueue_scripts', '${c.prefix}_oxygen_dequeue_styles', 20 );
+
+/**
+ * Register Oxygen template priorities.
+ *
+ * Ensures Oxygen templates take priority over the theme's
+ * default template hierarchy when assigned.
+ *
+ * @param string $template The template file path.
+ * @return string Modified template path.
+ */
+function ${c.prefix}_oxygen_template( $template ) {
+\t$post_id = get_the_ID();
+
+\tif ( ! $post_id ) {
+\t\treturn $template;
+\t}
+
+\t$shortcodes = get_post_meta( $post_id, 'ct_builder_shortcodes', true );
+\tif ( ! empty( $shortcodes ) && defined( 'CT_FW_PATH' ) ) {
+\t\t$oxygen_template = CT_FW_PATH . '/oxygen-main-template.php';
+\t\tif ( file_exists( $oxygen_template ) ) {
+\t\t\treturn $oxygen_template;
+\t\t}
+\t}
+
+\treturn $template;
+}
+add_filter( 'template_include', '${c.prefix}_oxygen_template', 99 );
+`;
+}
+
+function genBeaverPHP(c) {
+  return `<?php
+/**
+ * Beaver Builder integration for ${c.name}.
+ *
+ * Beaver Builder works within the_content() on standard pages.
+ * Beaver Themer (premium add-on) can override headers, footers,
+ * and archive layouts via its own location system.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+/**
+ * Add Beaver Builder theme support.
+ */
+function ${c.prefix}_beaver_setup() {
+\t// Fixes page title, featured image, and content conflicts.
+\tadd_theme_support( 'fl-theme-builder-headers' );
+\tadd_theme_support( 'fl-theme-builder-footers' );
+\tadd_theme_support( 'fl-theme-builder-parts' );
+}
+add_action( 'after_setup_theme', '${c.prefix}_beaver_setup' );
+
+/**
+ * Beaver Themer header support.
+ *
+ * When Beaver Themer assigns a custom header, the theme's
+ * default header is replaced.
+ */
+function ${c.prefix}_beaver_header() {
+\tif ( ! function_exists( 'FLThemeBuilderLayoutData::get_current_page_header_ids' ) ) {
+\t\treturn false;
+\t}
+
+\t$header_ids = FLThemeBuilderLayoutData::get_current_page_header_ids();
+\tif ( ! empty( $header_ids ) ) {
+\t\treturn true;
+\t}
+
+\treturn false;
+}
+
+/**
+ * Beaver Themer footer support.
+ *
+ * When Beaver Themer assigns a custom footer, the theme's
+ * default footer is replaced.
+ */
+function ${c.prefix}_beaver_footer() {
+\tif ( ! function_exists( 'FLThemeBuilderLayoutData::get_current_page_footer_ids' ) ) {
+\t\treturn false;
+\t}
+
+\t$footer_ids = FLThemeBuilderLayoutData::get_current_page_footer_ids();
+\tif ( ! empty( $footer_ids ) ) {
+\t\treturn true;
+\t}
+
+\treturn false;
+}
+
+/**
+ * Adjust content width for Beaver Builder full-width rows.
+ */
+function ${c.prefix}_beaver_content_width() {
+\tif ( class_exists( 'FLBuilderModel' ) && FLBuilderModel::is_builder_active() ) {
+\t\t$GLOBALS['content_width'] = apply_filters( '${c.prefix}_beaver_content_width', 100000 );
+\t}
+}
+add_action( 'template_redirect', '${c.prefix}_beaver_content_width' );
+`;
+}
+
+function genWPBakeryPHP(c) {
+  return `<?php
+/**
+ * WPBakery Page Builder (Visual Composer) integration for ${c.name}.
+ *
+ * WPBakery works within the_content() and uses shortcodes for layout.
+ * This integration ensures the theme does not constrain WPBakery's
+ * row and column system.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+/**
+ * Add WPBakery body class on pages using the builder.
+ *
+ * @param array $classes Existing body classes.
+ * @return array Modified body classes.
+ */
+function ${c.prefix}_wpbakery_body_classes( $classes ) {
+\tif ( is_singular() && function_exists( 'vc_is_page_editable' ) ) {
+\t\t$post_id = get_the_ID();
+\t\tif ( $post_id && get_post_meta( $post_id, '_wpb_vc_js_status', true ) === 'true' ) {
+\t\t\t$classes[] = '${c.slug}-wpbakery-page';
+\t\t}
+\t}
+\treturn $classes;
+}
+add_filter( 'body_class', '${c.prefix}_wpbakery_body_classes' );
+
+/**
+ * Adjust content width for WPBakery full-width rows.
+ *
+ * WPBakery's stretched rows need an unconstrained container.
+ */
+function ${c.prefix}_wpbakery_content_width() {
+\tif ( ! is_singular() ) {
+\t\treturn;
+\t}
+
+\t$post_id = get_the_ID();
+\tif ( $post_id && get_post_meta( $post_id, '_wpb_vc_js_status', true ) === 'true' ) {
+\t\t$GLOBALS['content_width'] = apply_filters( '${c.prefix}_wpbakery_content_width', 100000 );
+\t}
+}
+add_action( 'template_redirect', '${c.prefix}_wpbakery_content_width' );
+
+/**
+ * Set the theme's content container for WPBakery's stretched rows.
+ *
+ * WPBakery needs to know the CSS selector of the content wrapper
+ * to correctly calculate full-width row positioning.
+ */
+function ${c.prefix}_wpbakery_container() {
+\tif ( function_exists( 'vc_set_default_editor_post_types' ) ) {
+\t\tvc_set_default_editor_post_types( array( 'page', 'post' ) );
+\t}
+}
+add_action( 'vc_before_init', '${c.prefix}_wpbakery_container' );
+
+/**
+ * Add WPBakery editor styles so the backend editor matches the theme.
+ */
+function ${c.prefix}_wpbakery_editor_styles() {
+\tif ( function_exists( 'vc_add_css_file_to_editor' ) ) {
+\t\tvc_add_css_file_to_editor( get_template_directory_uri() . '/assets/css/main.css' );
+\t}
+}
+add_action( 'vc_before_init', '${c.prefix}_wpbakery_editor_styles' );
+`;
+}
+
+function genHeaderPHP(c) {
+  let headerChecks = [];
+  if (c.elementor) headerChecks.push(`function_exists( 'elementor_theme_do_location' ) && elementor_theme_do_location( 'header' )`);
+  if (c.beaver) headerChecks.push(`function_exists( '${c.prefix}_beaver_header' ) && ${c.prefix}_beaver_header()`);
+  const hasHeaderOverride = headerChecks.length > 0;
+  const elStart = hasHeaderOverride ? `<?php\n\tif ( ! ( ${headerChecks.join( ' || ' )} ) ) :\n\t?>` : '';
+  const elEnd = hasHeaderOverride ? `\t<?php endif; ?>` : '';
+
+  if (!c.headerBuilder) {
+    return `<?php
+/**
+ * The header template.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+?><!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+<head>
+\t<meta charset="<?php bloginfo( 'charset' ); ?>">
+\t<meta name="viewport" content="width=device-width, initial-scale=1.0">
+\t<link rel="profile" href="https://gmpg.org/xfn/11">
+\t<?php wp_head(); ?>
+</head>
+
+<body <?php body_class(); ?>>
+<?php wp_body_open(); ?>
+
+<a class="skip-link screen-reader-text" href="#primary">
+\t<?php esc_html_e( 'Skip to content', '${c.slug}' ); ?>
+</a>
+
+<div id="page" class="site">
+${elStart}
+\t<header id="masthead" class="site-header" role="banner">
+\t\t<div class="wrap">
+\t\t\t<div class="site-branding">
+\t\t\t\t<?php if ( has_custom_logo() ) : ?>
+\t\t\t\t\t<?php the_custom_logo(); ?>
+\t\t\t\t<?php else : ?>
+\t\t\t\t\t<h1 class="site-title">
+\t\t\t\t\t\t<a href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home">
+\t\t\t\t\t\t\t<?php bloginfo( 'name' ); ?>
+\t\t\t\t\t\t</a>
+\t\t\t\t\t</h1>
+\t\t\t\t\t<?php
+\t\t\t\t\t$${c.prefix}_description = get_bloginfo( 'description', 'display' );
+\t\t\t\t\tif ( $${c.prefix}_description || is_customize_preview() ) :
+\t\t\t\t\t?>
+\t\t\t\t\t\t<p class="site-description"><?php echo esc_html( $${c.prefix}_description ); ?></p>
+\t\t\t\t\t<?php endif; ?>
+\t\t\t\t<?php endif; ?>
+\t\t\t</div>
+
+\t\t\t<nav id="site-navigation" class="main-navigation" role="navigation" aria-label="<?php esc_attr_e( 'Primary Menu', '${c.slug}' ); ?>">
+\t\t\t\t<button class="menu-toggle" aria-controls="primary-menu" aria-expanded="false">
+\t\t\t\t\t<?php esc_html_e( 'Menu', '${c.slug}' ); ?>
+\t\t\t\t</button>
+\t\t\t\t<?php
+\t\t\t\twp_nav_menu( array(
+\t\t\t\t\t'theme_location' => '${c.slug}-menu-1',
+\t\t\t\t\t'menu_id'        => 'primary-menu',
+\t\t\t\t\t'container'      => false,
+\t\t\t\t\t'fallback_cb'    => false,
+\t\t\t\t) );
+\t\t\t\t?>
+\t\t\t</nav>
+\t\t</div>
+\t</header>
+${elEnd}
+`;
+  }
+
+  // Builder: header.php calls helper functions from functions.php
+  return `<?php
+/**
+ * The header template - Header Builder.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+?><!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+<head>
+\t<meta charset="<?php bloginfo( 'charset' ); ?>">
+\t<meta name="viewport" content="width=device-width, initial-scale=1.0">
+\t<link rel="profile" href="https://gmpg.org/xfn/11">
+\t<?php wp_head(); ?>
+</head>
+<body <?php body_class(); ?>>
+<?php wp_body_open(); ?>
+<a class="skip-link screen-reader-text" href="#primary"><?php esc_html_e( 'Skip to content', '${c.slug}' ); ?></a>
+<div id="page" class="site">
+${elStart}
+\t<header id="masthead" class="<?php echo esc_attr( ${c.prefix}_header_class() ); ?>" role="banner">
+\t\t<div class="wrap">
+\t\t\t<div class="site-branding">
+\t\t\t\t<?php if ( has_custom_logo() ) : ?>
+\t\t\t\t\t<?php the_custom_logo(); ?>
+\t\t\t\t<?php else : ?>
+\t\t\t\t\t<h1 class="site-title"><a href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home"><?php bloginfo( 'name' ); ?></a></h1>
+\t\t\t\t\t<?php $${c.prefix}_description = get_bloginfo( 'description', 'display' ); if ( $${c.prefix}_description || is_customize_preview() ) : ?>
+\t\t\t\t\t\t<p class="site-description"><?php echo esc_html( $${c.prefix}_description ); ?></p>
+\t\t\t\t\t<?php endif; ?>
+\t\t\t\t<?php endif; ?>
+\t\t\t</div>
+\t\t\t<nav id="site-navigation" class="main-navigation" role="navigation" aria-label="<?php esc_attr_e( 'Primary Menu', '${c.slug}' ); ?>">
+\t\t\t\t<button class="menu-toggle" aria-controls="primary-menu" aria-expanded="false">
+\t\t\t\t\t<span class="hamburger-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+\t\t\t\t\t<span class="screen-reader-text"><?php esc_html_e( 'Menu', '${c.slug}' ); ?></span>
+\t\t\t\t</button>
+\t\t\t\t<?php wp_nav_menu( array( 'theme_location' => '${c.slug}-menu-1', 'menu_id' => 'primary-menu', 'container' => false, 'fallback_cb' => 'wp_page_menu' ) ); ?>
+\t\t\t</nav>
+\t\t\t<?php ${c.prefix}_header_extras(); ?>
+\t\t</div>
+\t\t<?php ${c.prefix}_header_search_form(); ?>
+\t</header>
+\t<?php ${c.prefix}_mobile_menu_panel(); ?>
+${elEnd}
+`;
+}
+
+function genFooterPHP(c) {
+  // Build footer override check
+  let footerChecks = [];
+  if (c.elementor) footerChecks.push(`function_exists( 'elementor_theme_do_location' ) && elementor_theme_do_location( 'footer' )`);
+  if (c.beaver) footerChecks.push(`function_exists( '${c.prefix}_beaver_footer' ) && ${c.prefix}_beaver_footer()`);
+
+  const hasFooterOverride = footerChecks.length > 0;
+  const fStart = hasFooterOverride ? `<?php
+\tif ( ! ( ${footerChecks.join( ' || ' )} ) ) :
+\t?>` : '';
+  const fEnd = hasFooterOverride ? `\t<?php endif; ?>` : '';
+
+  // Static footer when builder is OFF
+  if (!c.headerBuilder) {
+    let footerWidgets = '';
+    if (c.footerWidgets > 0) {
+      footerWidgets = `\t\t<div class="footer-widgets">\n`;
+      for (let i = 1; i <= c.footerWidgets; i++) {
+        footerWidgets += `\t\t\t<?php if ( is_active_sidebar( '${c.slug}-footer-${i}' ) ) : ?>
+\t\t\t\t<div class="footer-widget-area">
+\t\t\t\t\t<?php dynamic_sidebar( '${c.slug}-footer-${i}' ); ?>
+\t\t\t\t</div>
+\t\t\t<?php endif; ?>\n`;
+      }
+      footerWidgets += `\t\t</div>\n`;
+    }
+
+    return `<?php
+/**
+ * The footer template.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+?>
+${fStart}
+\t<footer id="colophon" class="site-footer" role="contentinfo">
+\t\t<div class="wrap">
+${footerWidgets}\t\t\t<div class="site-info">
+\t\t\t\t<?php
+\t\t\t\tprintf(
+\t\t\t\t\t/* translators: %s: theme name */
+\t\t\t\t\tesc_html__( '&copy; %1$s %2$s', '${c.slug}' ),
+\t\t\t\t\tesc_html( gmdate( 'Y' ) ),
+\t\t\t\t\tesc_html( get_bloginfo( 'name' ) )
+\t\t\t\t);
+\t\t\t\t?>
+\t\t\t</div>
+\t\t</div>
+\t</footer>
+${fEnd}
+</div><!-- #page -->
+
+<?php wp_footer(); ?>
+</body>
+</html>
+`;
+  }
+
+  // Dynamic footer when builder is ON
+  return `<?php
+/**
+ * The footer template — Footer Builder enabled.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+// Footer Builder settings.
+$${c.prefix}_footer_layout    = get_theme_mod( '${c.prefix}_footer_layout', 'columns' );
+$${c.prefix}_footer_columns   = absint( get_theme_mod( '${c.prefix}_footer_columns', 3 ) );
+$${c.prefix}_footer_copyright = get_theme_mod( '${c.prefix}_footer_copyright', '' );
+$${c.prefix}_footer_btt       = get_theme_mod( '${c.prefix}_footer_back_to_top', true );
+$${c.prefix}_footer_nav       = get_theme_mod( '${c.prefix}_footer_nav_enable', true );
+
+// Build copyright text.
+if ( $${c.prefix}_footer_copyright ) {
+\t$${c.prefix}_copyright_output = str_replace(
+\t\tarray( '{year}', '{site}' ),
+\t\tarray( gmdate( 'Y' ), get_bloginfo( 'name' ) ),
+\t\t$${c.prefix}_footer_copyright
+\t);
+} else {
+\t$${c.prefix}_copyright_output = sprintf(
+\t\t/* translators: %1$s: year, %2$s: site name */
+\t\tesc_html__( '&copy; %1$s %2$s. All rights reserved.', '${c.slug}' ),
+\t\tgmdate( 'Y' ),
+\t\tget_bloginfo( 'name' )
+\t);
+}
+?>
+${fStart}
+\t<footer id="colophon" class="site-footer footer-layout-<?php echo esc_attr( $${c.prefix}_footer_layout ); ?>" role="contentinfo">
+\t\t<?php if ( 'centered' !== $${c.prefix}_footer_layout ) : ?>
+\t\t\t<div class="footer-widgets-wrap">
+\t\t\t\t<div class="wrap">
+\t\t\t\t\t<div class="footer-widgets">
+\t\t\t\t\t\t<?php for ( $${c.prefix}_i = 1; $${c.prefix}_i <= $${c.prefix}_footer_columns; $${c.prefix}_i++ ) : ?>
+\t\t\t\t\t\t\t<?php if ( is_active_sidebar( '${c.slug}-footer-' . $${c.prefix}_i ) ) : ?>
+\t\t\t\t\t\t\t\t<div class="footer-widget-area">
+\t\t\t\t\t\t\t\t\t<?php dynamic_sidebar( '${c.slug}-footer-' . $${c.prefix}_i ); ?>
+\t\t\t\t\t\t\t\t</div>
+\t\t\t\t\t\t\t<?php else : ?>
+\t\t\t\t\t\t\t\t<div class="footer-widget-area footer-widget-empty"></div>
+\t\t\t\t\t\t\t<?php endif; ?>
+\t\t\t\t\t\t<?php endfor; ?>
+\t\t\t\t\t</div>
+\t\t\t\t</div>
+\t\t\t</div>
+\t\t<?php endif; ?>
+
+\t\t<div class="footer-bar">
+\t\t\t<div class="wrap">
+\t\t\t\t<div class="site-info">
+\t\t\t\t\t<?php echo wp_kses_post( $${c.prefix}_copyright_output ); ?>
+\t\t\t\t</div>
+
+\t\t\t\t<?php if ( $${c.prefix}_footer_nav && has_nav_menu( '${c.slug}-menu-2' ) ) : ?>
+\t\t\t\t\t<nav class="footer-navigation" role="navigation" aria-label="<?php esc_attr_e( 'Footer Menu', '${c.slug}' ); ?>">
+\t\t\t\t\t\t<?php
+\t\t\t\t\t\twp_nav_menu( array(
+\t\t\t\t\t\t\t'theme_location' => '${c.slug}-menu-2',
+\t\t\t\t\t\t\t'menu_id'        => 'footer-menu',
+\t\t\t\t\t\t\t'container'      => false,
+\t\t\t\t\t\t\t'fallback_cb'    => false,
+\t\t\t\t\t\t\t'depth'          => 1,
+\t\t\t\t\t\t) );
+\t\t\t\t\t\t?>
+\t\t\t\t\t</nav>
+\t\t\t\t<?php endif; ?>
+\t\t\t</div>
+\t\t</div>
+\t</footer>
+
+\t<?php if ( $${c.prefix}_footer_btt ) : ?>
+\t\t<button id="${c.slug}-back-to-top" class="back-to-top" aria-label="<?php esc_attr_e( 'Back to top', '${c.slug}' ); ?>">
+\t\t\t<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+\t\t</button>
+\t<?php endif; ?>
+${fEnd}
+</div><!-- #page -->
+
+<?php wp_footer(); ?>
+</body>
+</html>
+`;
+}
+
+function genIndexPHP(c) {
+  const elCheck = c.elementor ? `
+<?php if ( function_exists( 'elementor_theme_do_location' ) && elementor_theme_do_location( 'archive' ) ) {
+\tget_footer();
+\treturn;
+} ?>
+
+` : '';
+
+  return `<?php
+/**
+ * The main template file.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+get_header();
+?>${elCheck}
+
+<main id="primary" class="site-content" role="main">
+\t${c.sidebar ? '<div class="content-area">\n\t\t<div class="primary">' : ''}
+\t<?php if ( have_posts() ) : ?>
+
+\t\t<?php if ( is_home() && ! is_front_page() ) : ?>
+\t\t\t<header class="page-header">
+\t\t\t\t<h1 class="page-title screen-reader-text">
+\t\t\t\t\t<?php single_post_title(); ?>
+\t\t\t\t</h1>
+\t\t\t</header>
+\t\t<?php endif; ?>
+
+\t\t<?php while ( have_posts() ) : the_post(); ?>
+\t\t\t<?php get_template_part( 'template-parts/content', get_post_type() ); ?>
+\t\t<?php endwhile; ?>
+
+\t\t<?php ${c.pagination ? `${c.prefix}_pagination()` : 'the_posts_navigation()'}; ?>
+
+\t<?php else : ?>
+\t\t<?php get_template_part( 'template-parts/content', 'none' ); ?>
+\t<?php endif; ?>
+\t${c.sidebar ? '</div>\n\t\t<?php get_sidebar(); ?>\n\t</div>' : ''}
+</main>
+
+<?php
+get_footer();
+`;
+}
+
+function genSinglePHP(c) {
+  const elCheck = c.elementor ? `
+<?php if ( function_exists( 'elementor_theme_do_location' ) && elementor_theme_do_location( 'single' ) ) {
+\tget_footer();
+\treturn;
+} ?>
+
+` : '';
+
+  return `<?php
+/**
+ * Single post template.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+get_header();
+?>${elCheck}
+
+<main id="primary" class="site-content" role="main">
+\t${c.sidebar ? '<div class="content-area">\n\t\t<div class="primary">' : ''}
+\t<?php while ( have_posts() ) : the_post(); ?>
+
+\t\t<article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
+\t\t\t<header class="entry-header">
+\t\t\t\t<?php the_title( '<h1 class="entry-title">', '</h1>' ); ?>
+\t\t\t\t<div class="entry-meta">
+\t\t\t\t\t<?php ${c.prefix}_posted_on(); ?>
+\t\t\t\t\t<?php ${c.prefix}_posted_by(); ?>
+\t\t\t\t</div>
+\t\t\t</header>
+
+\t\t\t${c.thumbnails ? `<?php if ( has_post_thumbnail() ) : ?>
+\t\t\t\t<div class="post-thumbnail">
+\t\t\t\t\t<?php the_post_thumbnail( '${c.slug}-featured' ); ?>
+\t\t\t\t</div>
+\t\t\t<?php endif; ?>\n` : ''}
+\t\t\t<div class="entry-content">
+\t\t\t\t<?php
+\t\t\t\tthe_content();
+
+\t\t\t\twp_link_pages( array(
+\t\t\t\t\t'before' => '<div class="page-links">' . esc_html__( 'Pages:', '${c.slug}' ),
+\t\t\t\t\t'after'  => '</div>',
+\t\t\t\t) );
+\t\t\t\t?>
+\t\t\t</div>
+
+\t\t\t<footer class="entry-footer">
+\t\t\t\t<?php ${c.prefix}_entry_footer(); ?>
+\t\t\t</footer>
+\t\t</article>
+
+${c.breadcrumbs ? `\t\t<?php ${c.prefix}_breadcrumbs(); ?>\n` : ''}
+\t\t<?php
+\t\tthe_post_navigation( array(
+\t\t\t'prev_text' => '<span class="nav-subtitle">' . esc_html__( 'Previous:', '${c.slug}' ) . '</span> <span class="nav-title">%title</span>',
+\t\t\t'next_text' => '<span class="nav-subtitle">' . esc_html__( 'Next:', '${c.slug}' ) . '</span> <span class="nav-title">%title</span>',
+\t\t) );
+
+\t\tif ( comments_open() || get_comments_number() ) :
+\t\t\tcomments_template();
+\t\tendif;
+\t\t?>
+
+\t<?php endwhile; ?>
+\t${c.sidebar ? '</div>\n\t\t<?php get_sidebar(); ?>\n\t</div>' : ''}
+</main>
+
+<?php
+get_footer();
+`;
+}
+
+function genPagePHP(c) {
+  const elCheck = c.elementor ? `
+<?php if ( function_exists( 'elementor_theme_do_location' ) && elementor_theme_do_location( 'single' ) ) {
+\tget_footer();
+\treturn;
+} ?>
+
+` : '';
+
+  return `<?php
+/**
+ * Page template.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+get_header();
+?>${elCheck}
+
+<main id="primary" class="site-content" role="main">
+
+\t<?php while ( have_posts() ) : the_post(); ?>
+
+\t\t<article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
+\t\t\t<header class="entry-header">
+\t\t\t\t<?php the_title( '<h1 class="entry-title">', '</h1>' ); ?>
+\t\t\t</header>
+
+\t\t\t${c.thumbnails ? `<?php if ( has_post_thumbnail() ) : ?>
+\t\t\t\t<div class="post-thumbnail">
+\t\t\t\t\t<?php the_post_thumbnail( '${c.slug}-featured' ); ?>
+\t\t\t\t</div>
+\t\t\t<?php endif; ?>\n` : ''}
+\t\t\t<div class="entry-content">
+\t\t\t\t<?php
+\t\t\t\tthe_content();
+
+\t\t\t\twp_link_pages( array(
+\t\t\t\t\t'before' => '<div class="page-links">' . esc_html__( 'Pages:', '${c.slug}' ),
+\t\t\t\t\t'after'  => '</div>',
+\t\t\t\t) );
+\t\t\t\t?>
+\t\t\t</div>
+\t\t</article>
+
+\t\t<?php
+\t\tif ( comments_open() || get_comments_number() ) :
+\t\t\tcomments_template();
+\t\tendif;
+\t\t?>
+
+\t<?php endwhile; ?>
+
+</main>
+
+<?php
+get_footer();
+`;
+}
+
+function genArchivePHP(c) {
+  const elCheck = c.elementor ? `
+<?php if ( function_exists( 'elementor_theme_do_location' ) && elementor_theme_do_location( 'archive' ) ) {
+\tget_footer();
+\treturn;
+} ?>
+
+` : '';
+
+  return `<?php
+/**
+ * Archive template.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+get_header();
+?>${elCheck}
+
+<main id="primary" class="site-content" role="main">
+\t${c.sidebar ? '<div class="content-area">\n\t\t<div class="primary">' : ''}
+
+${c.breadcrumbs ? `\t<?php ${c.prefix}_breadcrumbs(); ?>\n` : ''}
+\t<?php if ( have_posts() ) : ?>
+
+\t\t<header class="page-header">
+\t\t\t<?php
+\t\t\tthe_archive_title( '<h1 class="page-title">', '</h1>' );
+\t\t\tthe_archive_description( '<div class="archive-description">', '</div>' );
+\t\t\t?>
+\t\t</header>
+
+\t\t<?php while ( have_posts() ) : the_post(); ?>
+\t\t\t<?php get_template_part( 'template-parts/content', get_post_type() ); ?>
+\t\t<?php endwhile; ?>
+
+\t\t<?php ${c.pagination ? `${c.prefix}_pagination()` : 'the_posts_navigation()'}; ?>
+
+\t<?php else : ?>
+\t\t<?php get_template_part( 'template-parts/content', 'none' ); ?>
+\t<?php endif; ?>
+
+\t${c.sidebar ? '</div>\n\t\t<?php get_sidebar(); ?>\n\t</div>' : ''}
+</main>
+
+<?php
+get_footer();
+`;
+}
+
+function genSearchPHP(c) {
+  const elCheck = c.elementor ? `
+<?php if ( function_exists( 'elementor_theme_do_location' ) && elementor_theme_do_location( 'archive' ) ) {
+\tget_footer();
+\treturn;
+} ?>
+
+` : '';
+
+  return `<?php
+/**
+ * Search results template.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+get_header();
+?>${elCheck}
+
+<main id="primary" class="site-content" role="main">
+
+\t<?php if ( have_posts() ) : ?>
+
+\t\t<header class="page-header">
+\t\t\t<h1 class="page-title">
+\t\t\t\t<?php
+\t\t\t\tprintf(
+\t\t\t\t\t/* translators: %s: search query */
+\t\t\t\t\tesc_html__( 'Search Results for: %s', '${c.slug}' ),
+\t\t\t\t\t'<span>' . esc_html( get_search_query() ) . '</span>'
+\t\t\t\t);
+\t\t\t\t?>
+\t\t\t</h1>
+\t\t</header>
+
+\t\t<?php while ( have_posts() ) : the_post(); ?>
+\t\t\t<?php get_template_part( 'template-parts/content', 'search' ); ?>
+\t\t<?php endwhile; ?>
+
+\t\t<?php ${c.pagination ? `${c.prefix}_pagination()` : 'the_posts_navigation()'}; ?>
+
+\t<?php else : ?>
+\t\t<?php get_template_part( 'template-parts/content', 'none' ); ?>
+\t<?php endif; ?>
+
+</main>
+
+<?php
+get_footer();
+`;
+}
+
+function gen404PHP(c) {
+  return `<?php
+/**
+ * 404 (Not Found) template.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+get_header();
+?>
+
+<main id="primary" class="site-content" role="main">
+
+\t<section class="error-404 not-found">
+\t\t<header class="page-header">
+\t\t\t<h1 class="page-title"><?php esc_html_e( 'Oops! That page can&rsquo;t be found.', '${c.slug}' ); ?></h1>
+\t\t</header>
+
+\t\t<div class="page-content">
+\t\t\t<p><?php esc_html_e( 'It looks like nothing was found at this location. Try searching for what you need.', '${c.slug}' ); ?></p>
+\t\t\t<?php get_search_form(); ?>
+\t\t</div>
+\t</section>
+
+</main>
+
+<?php
+get_footer();
+`;
+}
+
+function genCommentsPHP(c) {
+  return `<?php
+/**
+ * Comments template.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+// Do not load if the post is password protected and no password has been entered.
+if ( post_password_required() ) {
+\treturn;
+}
+?>
+
+<div id="comments" class="comments-area">
+
+\t<?php if ( have_comments() ) : ?>
+\t\t<h2 class="comments-title">
+\t\t\t<?php
+\t\t\t$${c.prefix}_comment_count = get_comments_number();
+\t\t\tif ( 1 === (int) $${c.prefix}_comment_count ) {
+\t\t\t\tprintf(
+\t\t\t\t\t/* translators: %s: post title */
+\t\t\t\t\tesc_html__( 'One thought on &ldquo;%s&rdquo;', '${c.slug}' ),
+\t\t\t\t\t'<span>' . wp_kses_post( get_the_title() ) . '</span>'
+\t\t\t\t);
+\t\t\t} else {
+\t\t\t\tprintf(
+\t\t\t\t\t/* translators: 1: comment count, 2: post title */
+\t\t\t\t\tesc_html( _nx( '%1$s thought on &ldquo;%2$s&rdquo;', '%1$s thoughts on &ldquo;%2$s&rdquo;', $${c.prefix}_comment_count, 'comments title', '${c.slug}' ) ),
+\t\t\t\t\tnumber_format_i18n( $${c.prefix}_comment_count ),
+\t\t\t\t\t'<span>' . wp_kses_post( get_the_title() ) . '</span>'
+\t\t\t\t);
+\t\t\t}
+\t\t\t?>
+\t\t</h2>
+
+\t\t<ol class="comment-list">
+\t\t\t<?php
+\t\t\twp_list_comments( array(
+\t\t\t\t'style'      => 'ol',
+\t\t\t\t'short_ping' => true,
+\t\t\t) );
+\t\t\t?>
+\t\t</ol>
+
+\t\t<?php
+\t\tthe_comments_navigation();
+
+\t\tif ( ! comments_open() ) :
+\t\t?>
+\t\t\t<p class="no-comments"><?php esc_html_e( 'Comments are closed.', '${c.slug}' ); ?></p>
+\t\t<?php endif; ?>
+
+\t<?php endif; ?>
+
+\t<?php comment_form(); ?>
+
+</div>
+`;
+}
+
+function genSidebarPHP(c) {
+  return `<?php
+/**
+ * The sidebar template.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+if ( ! is_active_sidebar( '${c.slug}-sidebar' ) ) {
+\treturn;
+}
+?>
+
+<aside id="secondary" class="widget-area" role="complementary">
+\t<?php dynamic_sidebar( '${c.slug}-sidebar' ); ?>
+</aside>
+`;
+}
+
+function genContentPart(c) {
+  return `<?php
+/**
+ * Template part for displaying posts.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+?>
+
+<article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
+\t<header class="entry-header">
+\t\t<?php
+\t\tif ( is_singular() ) :
+\t\t\tthe_title( '<h1 class="entry-title">', '</h1>' );
+\t\telse :
+\t\t\tthe_title( '<h2 class="entry-title"><a href="' . esc_url( get_permalink() ) . '" rel="bookmark">', '</a></h2>' );
+\t\tendif;
+
+\t\tif ( 'post' === get_post_type() ) :
+\t\t?>
+\t\t\t<div class="entry-meta">
+\t\t\t\t<?php
+\t\t\t\t${c.prefix}_posted_on();
+\t\t\t\t${c.prefix}_posted_by();
+\t\t\t\t?>
+\t\t\t</div>
+\t\t<?php endif; ?>
+\t</header>
+
+\t${c.thumbnails ? `<?php if ( has_post_thumbnail() && ! is_singular() ) : ?>
+\t\t<a class="post-thumbnail" href="<?php the_permalink(); ?>" aria-hidden="true" tabindex="-1">
+\t\t\t<?php the_post_thumbnail( '${c.slug}-thumbnail' ); ?>
+\t\t</a>
+\t<?php endif; ?>\n` : ''}
+\t<div class="entry-content">
+\t\t<?php
+\t\tif ( is_singular() ) :
+\t\t\tthe_content();
+\t\telse :
+\t\t\tthe_excerpt();
+\t\tendif;
+\t\t?>
+\t</div>
+
+\t<footer class="entry-footer">
+\t\t<?php ${c.prefix}_entry_footer(); ?>
+\t</footer>
+</article>
+`;
+}
+
+function genContentNone(c) {
+  return `<?php
+/**
+ * Template part for displaying a message when no posts are found.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+?>
+
+<section class="no-results not-found">
+\t<header class="page-header">
+\t\t<h1 class="page-title"><?php esc_html_e( 'Nothing Found', '${c.slug}' ); ?></h1>
+\t</header>
+
+\t<div class="page-content">
+\t\t<?php if ( is_search() ) : ?>
+\t\t\t<p><?php esc_html_e( 'Sorry, but nothing matched your search terms. Please try again with different keywords.', '${c.slug}' ); ?></p>
+\t\t\t<?php get_search_form(); ?>
+\t\t<?php else : ?>
+\t\t\t<p><?php esc_html_e( 'It seems we can&rsquo;t find what you&rsquo;re looking for. Perhaps searching can help.', '${c.slug}' ); ?></p>
+\t\t\t<?php get_search_form(); ?>
+\t\t<?php endif; ?>
+\t</div>
+</section>
+`;
+}
+
+function genTemplateTags(c) {
+  return `<?php
+/**
+ * Custom template tags for ${c.name}.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+if ( ! function_exists( '${c.prefix}_posted_on' ) ) :
+\t/**
+\t * Print the posted-on date.
+\t */
+\tfunction ${c.prefix}_posted_on() {
+\t\t$time_string = '<time class="entry-date published updated" datetime="%1$s">%2$s</time>';
+\t\tif ( get_the_time( 'U' ) !== get_the_modified_time( 'U' ) ) {
+\t\t\t$time_string = '<time class="entry-date published" datetime="%1$s">%2$s</time><time class="updated" datetime="%3$s">%4$s</time>';
+\t\t}
+
+\t\t$time_string = sprintf(
+\t\t\t$time_string,
+\t\t\tesc_attr( get_the_date( DATE_W3C ) ),
+\t\t\tesc_html( get_the_date() ),
+\t\t\tesc_attr( get_the_modified_date( DATE_W3C ) ),
+\t\t\tesc_html( get_the_modified_date() )
+\t\t);
+
+\t\tprintf(
+\t\t\t'<span class="posted-on">%1$s %2$s</span>',
+\t\t\tesc_html_x( 'Posted on', 'post date', '${c.slug}' ),
+\t\t\twp_kses_post( $time_string )
+\t\t);
+\t}
+endif;
+
+if ( ! function_exists( '${c.prefix}_posted_by' ) ) :
+\t/**
+\t * Print the posted-by author.
+\t */
+\tfunction ${c.prefix}_posted_by() {
+\t\tprintf(
+\t\t\t'<span class="byline"> %1$s <span class="author vcard"><a class="url fn n" href="%2$s">%3$s</a></span></span>',
+\t\t\tesc_html_x( 'by', 'post author', '${c.slug}' ),
+\t\t\tesc_url( get_author_posts_url( get_the_author_meta( 'ID' ) ) ),
+\t\t\tesc_html( get_the_author() )
+\t\t);
+\t}
+endif;
+
+if ( ! function_exists( '${c.prefix}_entry_footer' ) ) :
+\t/**
+\t * Print entry footer with categories, tags and comments link.
+\t */
+\tfunction ${c.prefix}_entry_footer() {
+\t\tif ( 'post' === get_post_type() ) {
+\t\t\t$categories_list = get_the_category_list( esc_html__( ', ', '${c.slug}' ) );
+\t\t\tif ( $categories_list ) {
+\t\t\t\tprintf( '<span class="cat-links">%1$s %2$s</span>',
+\t\t\t\t\tesc_html__( 'Posted in', '${c.slug}' ),
+\t\t\t\t\twp_kses_post( $categories_list )
+\t\t\t\t);
+\t\t\t}
+
+\t\t\t$tags_list = get_the_tag_list( '', esc_html_x( ', ', 'list item separator', '${c.slug}' ) );
+\t\t\tif ( $tags_list ) {
+\t\t\t\tprintf( '<span class="tags-links">%1$s %2$s</span>',
+\t\t\t\t\tesc_html__( 'Tagged', '${c.slug}' ),
+\t\t\t\t\twp_kses_post( $tags_list )
+\t\t\t\t);
+\t\t\t}
+\t\t}
+
+\t\tif ( ! is_single() && ! post_password_required() && ( comments_open() || get_comments_number() ) ) {
+\t\t\techo '<span class="comments-link">';
+\t\t\tcomments_popup_link(
+\t\t\t\tesc_html__( 'Leave a comment', '${c.slug}' ),
+\t\t\t\tesc_html__( '1 Comment', '${c.slug}' ),
+\t\t\t\tesc_html__( '% Comments', '${c.slug}' )
+\t\t\t);
+\t\t\techo '</span>';
+\t\t}
+
+\t\tedit_post_link(
+\t\t\tesc_html__( 'Edit', '${c.slug}' ),
+\t\t\t'<span class="edit-link">',
+\t\t\t'</span>'
+\t\t);
+\t}
+endif;
+`;
+}
+
+function genPagination(c) {
+  // This is embedded in template-tags or functions; we add a standalone function
+  return `
+if ( ! function_exists( '${c.prefix}_pagination' ) ) :
+\t/**
+\t * Display numbered pagination.
+\t */
+\tfunction ${c.prefix}_pagination() {
+\t\tthe_posts_pagination( array(
+\t\t\t'mid_size'  => 2,
+\t\t\t'prev_text' => esc_html__( '&laquo; Previous', '${c.slug}' ),
+\t\t\t'next_text' => esc_html__( 'Next &raquo;', '${c.slug}' ),
+\t\t) );
+\t}
+endif;
+`;
+}
+
+function genBreadcrumbs(c) {
+  return `<?php
+/**
+ * Breadcrumb navigation for ${c.name}.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+if ( ! function_exists( '${c.prefix}_breadcrumbs' ) ) :
+\t/**
+\t * Display breadcrumb navigation.
+\t */
+\tfunction ${c.prefix}_breadcrumbs() {
+\t\tif ( is_front_page() ) {
+\t\t\treturn;
+\t\t}
+
+\t\techo '<nav class="breadcrumbs" aria-label="' . esc_attr__( 'Breadcrumb', '${c.slug}' ) . '">';
+\t\techo '<ol itemscope itemtype="https://schema.org/BreadcrumbList">';
+
+\t\t// Home link.
+\t\techo '<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">';
+\t\techo '<a itemprop="item" href="' . esc_url( home_url( '/' ) ) . '">';
+\t\techo '<span itemprop="name">' . esc_html__( 'Home', '${c.slug}' ) . '</span>';
+\t\techo '</a>';
+\t\techo '<meta itemprop="position" content="1" />';
+\t\techo '</li>';
+
+\t\t$position = 2;
+
+\t\tif ( is_category() || is_single() ) {
+\t\t\t$categories = get_the_category();
+\t\t\tif ( ! empty( $categories ) ) {
+\t\t\t\t$category = $categories[0];
+\t\t\t\techo '<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">';
+\t\t\t\techo '<a itemprop="item" href="' . esc_url( get_category_link( $category->term_id ) ) . '">';
+\t\t\t\techo '<span itemprop="name">' . esc_html( $category->name ) . '</span>';
+\t\t\t\techo '</a>';
+\t\t\t\techo '<meta itemprop="position" content="' . esc_attr( $position ) . '" />';
+\t\t\t\techo '</li>';
+\t\t\t\t$position++;
+\t\t\t}
+\t\t}
+
+\t\tif ( is_single() || is_page() ) {
+\t\t\techo '<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">';
+\t\t\techo '<span itemprop="name">' . esc_html( get_the_title() ) . '</span>';
+\t\t\techo '<meta itemprop="position" content="' . esc_attr( $position ) . '" />';
+\t\t\techo '</li>';
+\t\t} elseif ( is_archive() ) {
+\t\t\techo '<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">';
+\t\t\techo '<span itemprop="name">' . esc_html( get_the_archive_title() ) . '</span>';
+\t\t\techo '<meta itemprop="position" content="' . esc_attr( $position ) . '" />';
+\t\t\techo '</li>';
+\t\t} elseif ( is_search() ) {
+\t\t\techo '<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">';
+\t\t\techo '<span itemprop="name">' . esc_html__( 'Search Results', '${c.slug}' ) . '</span>';
+\t\t\techo '<meta itemprop="position" content="' . esc_attr( $position ) . '" />';
+\t\t\techo '</li>';
+\t\t}
+
+\t\techo '</ol>';
+\t\techo '</nav>';
+\t}
+endif;
+`;
+}
+
+function genCustomizer(c) {
+  let code = `<?php
+/**
+ * Theme Customizer for ${c.name}.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+/**
+ * Sanitise select/radio inputs.
+ *
+ * @param string $input   The value to sanitise.
+ * @param object $setting The setting instance.
+ * @return string
+ */
+function ${c.prefix}_sanitize_select( $input, $setting ) {
+\t$choices = $setting->manager->get_control( $setting->id )->choices;
+\treturn ( array_key_exists( $input, $choices ) ? $input : $setting->default );
+}
+
+/**
+ * Sanitise checkbox inputs.
+ *
+ * @param bool $checked Whether checked.
+ * @return bool
+ */
+function ${c.prefix}_sanitize_checkbox( $checked ) {
+\treturn ( ! empty( $checked ) && '0' !== $checked ) ? true : false;
+}
+
+/**
+ * Register Customizer settings and controls.
+ *
+ * @param WP_Customize_Manager $wp_customize Customizer manager instance.
+ */
+function ${c.prefix}_customize_register( $wp_customize ) {
+
+\t// --- Colours Section ---
+\t$wp_customize->add_section( '${c.prefix}_colours', array(
+\t\t'title'    => esc_html__( 'Theme Colours', '${c.slug}' ),
+\t\t'priority' => 30,
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_primary_colour', array(
+\t\t'default'           => '#2563eb',
+\t\t'sanitize_callback' => 'sanitize_hex_color',
+\t\t'transport'         => 'postMessage',
+\t) );
+
+\t$wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, '${c.prefix}_primary_colour', array(
+\t\t'label'   => esc_html__( 'Primary Colour', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_colours',
+\t) ) );
+
+\t$wp_customize->add_setting( '${c.prefix}_secondary_colour', array(
+\t\t'default'           => '#475569',
+\t\t'sanitize_callback' => 'sanitize_hex_color',
+\t\t'transport'         => 'postMessage',
+\t) );
+
+\t$wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, '${c.prefix}_secondary_colour', array(
+\t\t'label'   => esc_html__( 'Secondary Colour', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_colours',
+\t) ) );
+
+\t// --- Typography Section ---
+\t$wp_customize->add_section( '${c.prefix}_typography', array(
+\t\t'title'    => esc_html__( 'Typography', '${c.slug}' ),
+\t\t'priority' => 35,
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_body_font_size', array(
+\t\t'default'           => '16',
+\t\t'sanitize_callback' => 'absint',
+\t\t'transport'         => 'postMessage',
+\t) );
+
+\t$wp_customize->add_control( '${c.prefix}_body_font_size', array(
+\t\t'label'       => esc_html__( 'Body Font Size (px)', '${c.slug}' ),
+\t\t'section'     => '${c.prefix}_typography',
+\t\t'type'        => 'number',
+\t\t'input_attrs' => array(
+\t\t\t'min'  => 12,
+\t\t\t'max'  => 24,
+\t\t\t'step' => 1,
+\t\t),
+\t) );
+
+\t// --- Layout Section ---
+\t$wp_customize->add_section( '${c.prefix}_layout', array(
+\t\t'title'    => esc_html__( 'Layout', '${c.slug}' ),
+\t\t'priority' => 40,
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_container_width', array(
+\t\t'default'           => '1200',
+\t\t'sanitize_callback' => 'absint',
+\t) );
+
+\t$wp_customize->add_control( '${c.prefix}_container_width', array(
+\t\t'label'       => esc_html__( 'Container Width (px)', '${c.slug}' ),
+\t\t'section'     => '${c.prefix}_layout',
+\t\t'type'        => 'number',
+\t\t'input_attrs' => array(
+\t\t\t'min'  => 960,
+\t\t\t'max'  => 1600,
+\t\t\t'step' => 10,
+\t\t),
+\t) );
+`;
+
+  if (c.headerBuilder) {
+    code += `
+\t// =====================================================================
+\t// HEADER BUILDER
+\t// =====================================================================
+\t$wp_customize->add_panel( '${c.prefix}_header_panel', array(
+\t\t'title'    => esc_html__( 'Header Builder', '${c.slug}' ),
+\t\t'priority' => 25,
+\t) );
+
+\t// --- Header: Layout ---
+\t$wp_customize->add_section( '${c.prefix}_header_layout', array(
+\t\t'title' => esc_html__( 'Layout', '${c.slug}' ),
+\t\t'panel' => '${c.prefix}_header_panel',
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_header_layout', array(
+\t\t'default'           => 'logo-left',
+\t\t'sanitize_callback' => '${c.prefix}_sanitize_select',
+\t) );
+
+\t$wp_customize->add_control( '${c.prefix}_header_layout', array(
+\t\t'label'   => esc_html__( 'Header Layout', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_header_layout',
+\t\t'type'    => 'select',
+\t\t'choices' => array(
+\t\t\t'logo-left'    => esc_html__( 'Logo Left / Nav Right', '${c.slug}' ),
+\t\t\t'logo-center'  => esc_html__( 'Logo Centre / Nav Below', '${c.slug}' ),
+\t\t\t'nav-left'     => esc_html__( 'Nav Left / Logo Right', '${c.slug}' ),
+\t\t\t'stacked'      => esc_html__( 'Stacked (Logo + Nav Centred)', '${c.slug}' ),
+\t\t),
+\t) );
+
+\t// --- Header: Appearance ---
+\t$wp_customize->add_section( '${c.prefix}_header_appearance', array(
+\t\t'title' => esc_html__( 'Appearance', '${c.slug}' ),
+\t\t'panel' => '${c.prefix}_header_panel',
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_header_bg_colour', array(
+\t\t'default'           => '#ffffff',
+\t\t'sanitize_callback' => 'sanitize_hex_color',
+\t\t'transport'         => 'postMessage',
+\t) );
+
+\t$wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, '${c.prefix}_header_bg_colour', array(
+\t\t'label'   => esc_html__( 'Background Colour', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_header_appearance',
+\t) ) );
+
+\t$wp_customize->add_setting( '${c.prefix}_header_text_colour', array(
+\t\t'default'           => '#1e293b',
+\t\t'sanitize_callback' => 'sanitize_hex_color',
+\t\t'transport'         => 'postMessage',
+\t) );
+
+\t$wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, '${c.prefix}_header_text_colour', array(
+\t\t'label'   => esc_html__( 'Text Colour', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_header_appearance',
+\t) ) );
+
+\t$wp_customize->add_setting( '${c.prefix}_header_link_colour', array(
+\t\t'default'           => '#475569',
+\t\t'sanitize_callback' => 'sanitize_hex_color',
+\t\t'transport'         => 'postMessage',
+\t) );
+
+\t$wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, '${c.prefix}_header_link_colour', array(
+\t\t'label'   => esc_html__( 'Navigation Link Colour', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_header_appearance',
+\t) ) );
+
+\t$wp_customize->add_setting( '${c.prefix}_header_padding', array(
+\t\t'default'           => '16',
+\t\t'sanitize_callback' => 'absint',
+\t) );
+
+\t$wp_customize->add_control( '${c.prefix}_header_padding', array(
+\t\t'label'       => esc_html__( 'Vertical Padding (px)', '${c.slug}' ),
+\t\t'section'     => '${c.prefix}_header_appearance',
+\t\t'type'        => 'number',
+\t\t'input_attrs' => array( 'min' => 0, 'max' => 60, 'step' => 2 ),
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_header_border', array(
+\t\t'default'           => true,
+\t\t'sanitize_callback' => '${c.prefix}_sanitize_checkbox',
+\t) );
+
+\t$wp_customize->add_control( '${c.prefix}_header_border', array(
+\t\t'label'   => esc_html__( 'Show Bottom Border', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_header_appearance',
+\t\t'type'    => 'checkbox',
+\t) );
+
+\t// --- Header: Behaviour ---
+\t$wp_customize->add_section( '${c.prefix}_header_behaviour', array(
+\t\t'title' => esc_html__( 'Behaviour', '${c.slug}' ),
+\t\t'panel' => '${c.prefix}_header_panel',
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_header_sticky', array(
+\t\t'default'           => 'none',
+\t\t'sanitize_callback' => '${c.prefix}_sanitize_select',
+\t) );
+
+\t$wp_customize->add_control( '${c.prefix}_header_sticky', array(
+\t\t'label'       => esc_html__( 'Sticky Header', '${c.slug}' ),
+\t\t'description' => esc_html__( 'Smart: header hides on scroll down and reappears on scroll up.', '${c.slug}' ),
+\t\t'section'     => '${c.prefix}_header_behaviour',
+\t\t'type'        => 'select',
+\t\t'choices'     => array(
+\t\t\t'none'   => esc_html__( 'Off', '${c.slug}' ),
+\t\t\t'always' => esc_html__( 'Always Sticky', '${c.slug}' ),
+\t\t\t'smart'  => esc_html__( 'Smart (Show on Scroll Up)', '${c.slug}' ),
+\t\t),
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_header_sticky_shadow', array(
+\t\t'default'           => true,
+\t\t'sanitize_callback' => '${c.prefix}_sanitize_checkbox',
+\t) );
+
+\t$wp_customize->add_control( '${c.prefix}_header_sticky_shadow', array(
+\t\t'label'   => esc_html__( 'Show Shadow When Scrolled', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_header_behaviour',
+\t\t'type'    => 'checkbox',
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_header_transparent', array(
+\t\t'default'           => false,
+\t\t'sanitize_callback' => '${c.prefix}_sanitize_checkbox',
+\t) );
+
+\t$wp_customize->add_control( '${c.prefix}_header_transparent', array(
+\t\t'label'       => esc_html__( 'Transparent Header (Front Page Only)', '${c.slug}' ),
+\t\t'description' => esc_html__( 'Header overlays the content with a transparent background on the front page.', '${c.slug}' ),
+\t\t'section'     => '${c.prefix}_header_behaviour',
+\t\t'type'        => 'checkbox',
+\t) );
+
+\t// --- Header: Elements ---
+\t$wp_customize->add_section( '${c.prefix}_header_elements', array(
+\t\t'title' => esc_html__( 'Elements', '${c.slug}' ),
+\t\t'panel' => '${c.prefix}_header_panel',
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_header_search', array(
+\t\t'default'           => false,
+\t\t'sanitize_callback' => '${c.prefix}_sanitize_checkbox',
+\t) );
+
+\t$wp_customize->add_control( '${c.prefix}_header_search', array(
+\t\t'label'   => esc_html__( 'Show Search Icon', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_header_elements',
+\t\t'type'    => 'checkbox',
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_header_cta_enable', array(
+\t\t'default'           => false,
+\t\t'sanitize_callback' => '${c.prefix}_sanitize_checkbox',
+\t) );
+
+\t$wp_customize->add_control( '${c.prefix}_header_cta_enable', array(
+\t\t'label'   => esc_html__( 'Show CTA Button', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_header_elements',
+\t\t'type'    => 'checkbox',
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_header_cta_text', array(
+\t\t'default'           => 'Get Started',
+\t\t'sanitize_callback' => 'sanitize_text_field',
+\t) );
+
+\t$wp_customize->add_control( '${c.prefix}_header_cta_text', array(
+\t\t'label'   => esc_html__( 'CTA Button Text', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_header_elements',
+\t\t'type'    => 'text',
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_header_cta_url', array(
+\t\t'default'           => '#',
+\t\t'sanitize_callback' => 'esc_url_raw',
+\t) );
+
+\t$wp_customize->add_control( '${c.prefix}_header_cta_url', array(
+\t\t'label'   => esc_html__( 'CTA Button URL', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_header_elements',
+\t\t'type'    => 'url',
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_header_cta_colour', array(
+\t\t'default'           => '#2563eb',
+\t\t'sanitize_callback' => 'sanitize_hex_color',
+\t) );
+
+\t$wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, '${c.prefix}_header_cta_colour', array(
+\t\t'label'   => esc_html__( 'CTA Button Colour', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_header_elements',
+\t) ) );
+
+\t// --- Header: Mobile ---
+\t$wp_customize->add_section( '${c.prefix}_header_mobile', array(
+\t\t'title' => esc_html__( 'Mobile Menu', '${c.slug}' ),
+\t\t'panel' => '${c.prefix}_header_panel',
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_mobile_menu_style', array(
+\t\t'default'           => 'dropdown',
+\t\t'sanitize_callback' => '${c.prefix}_sanitize_select',
+\t) );
+
+\t$wp_customize->add_control( '${c.prefix}_mobile_menu_style', array(
+\t\t'label'   => esc_html__( 'Mobile Menu Style', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_header_mobile',
+\t\t'type'    => 'select',
+\t\t'choices' => array(
+\t\t\t'dropdown'   => esc_html__( 'Dropdown', '${c.slug}' ),
+\t\t\t'slide-left' => esc_html__( 'Slide-In (Left)', '${c.slug}' ),
+\t\t\t'fullscreen' => esc_html__( 'Full Screen Overlay', '${c.slug}' ),
+\t\t),
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_mobile_breakpoint', array(
+\t\t'default'           => '768',
+\t\t'sanitize_callback' => 'absint',
+\t) );
+
+\t$wp_customize->add_control( '${c.prefix}_mobile_breakpoint', array(
+\t\t'label'       => esc_html__( 'Mobile Breakpoint (px)', '${c.slug}' ),
+\t\t'section'     => '${c.prefix}_header_mobile',
+\t\t'type'        => 'number',
+\t\t'input_attrs' => array( 'min' => 480, 'max' => 1200, 'step' => 1 ),
+\t) );
+
+\t// =====================================================================
+\t// FOOTER BUILDER
+\t// =====================================================================
+\t$wp_customize->add_panel( '${c.prefix}_footer_panel', array(
+\t\t'title'    => esc_html__( 'Footer Builder', '${c.slug}' ),
+\t\t'priority' => 26,
+\t) );
+
+\t// --- Footer: Layout ---
+\t$wp_customize->add_section( '${c.prefix}_footer_layout', array(
+\t\t'title' => esc_html__( 'Layout', '${c.slug}' ),
+\t\t'panel' => '${c.prefix}_footer_panel',
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_footer_layout', array(
+\t\t'default'           => 'columns',
+\t\t'sanitize_callback' => '${c.prefix}_sanitize_select',
+\t) );
+
+\t$wp_customize->add_control( '${c.prefix}_footer_layout', array(
+\t\t'label'   => esc_html__( 'Footer Layout', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_footer_layout',
+\t\t'type'    => 'select',
+\t\t'choices' => array(
+\t\t\t'columns'  => esc_html__( 'Widget Columns', '${c.slug}' ),
+\t\t\t'centered' => esc_html__( 'Centred Minimal', '${c.slug}' ),
+\t\t\t'two-row'  => esc_html__( 'Two Row (Widgets + Bar)', '${c.slug}' ),
+\t\t),
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_footer_columns', array(
+\t\t'default'           => '3',
+\t\t'sanitize_callback' => '${c.prefix}_sanitize_select',
+\t) );
+
+\t$wp_customize->add_control( '${c.prefix}_footer_columns', array(
+\t\t'label'   => esc_html__( 'Widget Columns', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_footer_layout',
+\t\t'type'    => 'select',
+\t\t'choices' => array(
+\t\t\t'1' => '1',
+\t\t\t'2' => '2',
+\t\t\t'3' => '3',
+\t\t\t'4' => '4',
+\t\t),
+\t) );
+
+\t// --- Footer: Appearance ---
+\t$wp_customize->add_section( '${c.prefix}_footer_appearance', array(
+\t\t'title' => esc_html__( 'Appearance', '${c.slug}' ),
+\t\t'panel' => '${c.prefix}_footer_panel',
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_footer_bg_colour', array(
+\t\t'default'           => '#1e293b',
+\t\t'sanitize_callback' => 'sanitize_hex_color',
+\t\t'transport'         => 'postMessage',
+\t) );
+
+\t$wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, '${c.prefix}_footer_bg_colour', array(
+\t\t'label'   => esc_html__( 'Background Colour', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_footer_appearance',
+\t) ) );
+
+\t$wp_customize->add_setting( '${c.prefix}_footer_text_colour', array(
+\t\t'default'           => '#cbd5e1',
+\t\t'sanitize_callback' => 'sanitize_hex_color',
+\t\t'transport'         => 'postMessage',
+\t) );
+
+\t$wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, '${c.prefix}_footer_text_colour', array(
+\t\t'label'   => esc_html__( 'Text Colour', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_footer_appearance',
+\t) ) );
+
+\t$wp_customize->add_setting( '${c.prefix}_footer_link_colour', array(
+\t\t'default'           => '#93c5fd',
+\t\t'sanitize_callback' => 'sanitize_hex_color',
+\t\t'transport'         => 'postMessage',
+\t) );
+
+\t$wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, '${c.prefix}_footer_link_colour', array(
+\t\t'label'   => esc_html__( 'Link Colour', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_footer_appearance',
+\t) ) );
+
+\t$wp_customize->add_setting( '${c.prefix}_footer_padding', array(
+\t\t'default'           => '40',
+\t\t'sanitize_callback' => 'absint',
+\t) );
+
+\t$wp_customize->add_control( '${c.prefix}_footer_padding', array(
+\t\t'label'       => esc_html__( 'Vertical Padding (px)', '${c.slug}' ),
+\t\t'section'     => '${c.prefix}_footer_appearance',
+\t\t'type'        => 'number',
+\t\t'input_attrs' => array( 'min' => 0, 'max' => 100, 'step' => 5 ),
+\t) );
+
+\t// --- Footer: Elements ---
+\t$wp_customize->add_section( '${c.prefix}_footer_elements', array(
+\t\t'title' => esc_html__( 'Elements', '${c.slug}' ),
+\t\t'panel' => '${c.prefix}_footer_panel',
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_footer_copyright', array(
+\t\t'default'           => '',
+\t\t'sanitize_callback' => 'wp_kses_post',
+\t) );
+
+\t$wp_customize->add_control( '${c.prefix}_footer_copyright', array(
+\t\t'label'       => esc_html__( 'Custom Copyright Text', '${c.slug}' ),
+\t\t'description' => esc_html__( 'Leave blank for default. Use {year} for current year, {site} for site name.', '${c.slug}' ),
+\t\t'section'     => '${c.prefix}_footer_elements',
+\t\t'type'        => 'textarea',
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_footer_back_to_top', array(
+\t\t'default'           => true,
+\t\t'sanitize_callback' => '${c.prefix}_sanitize_checkbox',
+\t) );
+
+\t$wp_customize->add_control( '${c.prefix}_footer_back_to_top', array(
+\t\t'label'   => esc_html__( 'Show Back to Top Button', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_footer_elements',
+\t\t'type'    => 'checkbox',
+\t) );
+
+\t$wp_customize->add_setting( '${c.prefix}_footer_nav_enable', array(
+\t\t'default'           => true,
+\t\t'sanitize_callback' => '${c.prefix}_sanitize_checkbox',
+\t) );
+
+\t$wp_customize->add_control( '${c.prefix}_footer_nav_enable', array(
+\t\t'label'   => esc_html__( 'Show Footer Navigation', '${c.slug}' ),
+\t\t'section' => '${c.prefix}_footer_elements',
+\t\t'type'    => 'checkbox',
+\t) );
+`;
+  }
+
+  code += `}
+add_action( 'customize_register', '${c.prefix}_customize_register' );
+
+/**
+ * Output custom CSS from Customizer settings.
+ */
+function ${c.prefix}_customizer_css() {
+\t$primary   = get_theme_mod( '${c.prefix}_primary_colour', '#2563eb' );
+\t$secondary = get_theme_mod( '${c.prefix}_secondary_colour', '#475569' );
+\t$font_size = absint( get_theme_mod( '${c.prefix}_body_font_size', 16 ) );
+\t$container = absint( get_theme_mod( '${c.prefix}_container_width', 1200 ) );
+
+\t$css = ':root {';
+\t$css .= '--${c.slug}-primary: ' . sanitize_hex_color( $primary ) . ';';
+\t$css .= '--${c.slug}-secondary: ' . sanitize_hex_color( $secondary ) . ';';
+\t$css .= '--${c.slug}-max-width: ' . $container . 'px;';
+\t$css .= '}';
+\t$css .= 'body { font-size: ' . $font_size . 'px; }';
+`;
+
+  if (c.headerBuilder) {
+    code += `
+\t// Header builder dynamic CSS.
+\t$h_bg      = sanitize_hex_color( get_theme_mod( '${c.prefix}_header_bg_colour', '#ffffff' ) );
+\t$h_text    = sanitize_hex_color( get_theme_mod( '${c.prefix}_header_text_colour', '#1e293b' ) );
+\t$h_link    = sanitize_hex_color( get_theme_mod( '${c.prefix}_header_link_colour', '#475569' ) );
+\t$h_pad     = absint( get_theme_mod( '${c.prefix}_header_padding', 16 ) );
+\t$h_border  = get_theme_mod( '${c.prefix}_header_border', true );
+\t$cta_bg    = sanitize_hex_color( get_theme_mod( '${c.prefix}_header_cta_colour', '#2563eb' ) );
+\t$breakpt   = absint( get_theme_mod( '${c.prefix}_mobile_breakpoint', 768 ) );
+
+\t$css .= '.site-header {';
+\t$css .= 'background-color: ' . $h_bg . ';';
+\t$css .= 'padding: ' . $h_pad . 'px 1rem;';
+\t$css .= $h_border ? 'border-bottom: 1px solid var(--${c.slug}-border);' : 'border-bottom: none;';
+\t$css .= '}';
+\t$css .= '.site-header .site-title a, .site-header .site-description { color: ' . $h_text . '; }';
+\t$css .= '.site-header .main-navigation a { color: ' . $h_link . '; }';
+\t$css .= '.site-header .header-cta { background-color: ' . $cta_bg . '; }';
+
+\t// Footer builder dynamic CSS.
+\t$f_bg   = sanitize_hex_color( get_theme_mod( '${c.prefix}_footer_bg_colour', '#1e293b' ) );
+\t$f_text = sanitize_hex_color( get_theme_mod( '${c.prefix}_footer_text_colour', '#cbd5e1' ) );
+\t$f_link = sanitize_hex_color( get_theme_mod( '${c.prefix}_footer_link_colour', '#93c5fd' ) );
+\t$f_pad  = absint( get_theme_mod( '${c.prefix}_footer_padding', 40 ) );
+\t$f_cols = absint( get_theme_mod( '${c.prefix}_footer_columns', 3 ) );
+
+\t$css .= '.site-footer { background-color: ' . $f_bg . '; color: ' . $f_text . '; padding: ' . $f_pad . 'px 1rem; }';
+\t$css .= '.site-footer a { color: ' . $f_link . '; }';
+\t$css .= '.site-footer .widget-title { color: ' . $f_text . '; }';
+\tif ( $f_cols > 0 ) {
+\t\t$css .= '.footer-widgets { grid-template-columns: repeat(' . $f_cols . ', 1fr); }';
+\t}
+
+\t// Mobile breakpoint.
+\t$css .= '@media (max-width: ' . $breakpt . 'px) {';
+\t$css .= '.menu-toggle { display: block; }';
+\t$css .= '.main-navigation ul { display: none; width: 100%; flex-direction: column; gap: 0; }';
+\t$css .= '.main-navigation.toggled ul { display: flex; }';
+\t$css .= '.header-cta, .header-search-toggle { display: none; }';
+\t$css .= '.footer-widgets { grid-template-columns: 1fr; }';
+\t$css .= '}';
+`;
+  }
+
+  code += `
+\twp_add_inline_style( '${c.slug}-style', $css );
+}
+add_action( 'wp_enqueue_scripts', '${c.prefix}_customizer_css' );
+
+/**
+ * Enqueue Customizer live preview script.
+ */
+function ${c.prefix}_customizer_preview_js() {
+\twp_enqueue_script(
+\t\t'${c.slug}-customizer-preview',
+\t\t${c.prefixUpper}_URI . '/assets/js/customizer-preview.js',
+\t\tarray( 'customize-preview', 'jquery' ),
+\t\t${c.prefixUpper}_VERSION,
+\t\ttrue
+\t);
+}
+add_action( 'customize_preview_init', '${c.prefix}_customizer_preview_js' );
+`;
+
+  return code;
+}
+
+
+function genCPT(c) {
+  return `<?php
+/**
+ * Custom Post Types for ${c.name}.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+/**
+ * Register custom post types.
+ */
+function ${c.prefix}_register_post_types() {
+
+\t$labels = array(
+\t\t'name'                  => _x( 'Projects', 'Post type general name', '${c.slug}' ),
+\t\t'singular_name'         => _x( 'Project', 'Post type singular name', '${c.slug}' ),
+\t\t'menu_name'             => esc_html_x( 'Projects', 'Admin Menu text', '${c.slug}' ),
+\t\t'add_new'               => esc_html__( 'Add New', '${c.slug}' ),
+\t\t'add_new_item'          => esc_html__( 'Add New Project', '${c.slug}' ),
+\t\t'edit_item'             => esc_html__( 'Edit Project', '${c.slug}' ),
+\t\t'new_item'              => esc_html__( 'New Project', '${c.slug}' ),
+\t\t'view_item'             => esc_html__( 'View Project', '${c.slug}' ),
+\t\t'search_items'          => esc_html__( 'Search Projects', '${c.slug}' ),
+\t\t'not_found'             => esc_html__( 'No projects found.', '${c.slug}' ),
+\t\t'not_found_in_trash'    => esc_html__( 'No projects found in Trash.', '${c.slug}' ),
+\t\t'all_items'             => esc_html__( 'All Projects', '${c.slug}' ),
+\t);
+
+\t$args = array(
+\t\t'labels'             => $labels,
+\t\t'public'             => true,
+\t\t'publicly_queryable' => true,
+\t\t'show_ui'            => true,
+\t\t'show_in_menu'       => true,
+\t\t'show_in_rest'       => true,
+\t\t'query_var'          => true,
+\t\t'rewrite'            => array( 'slug' => 'projects' ),
+\t\t'capability_type'    => 'post',
+\t\t'has_archive'        => true,
+\t\t'hierarchical'       => false,
+\t\t'menu_position'      => 5,
+\t\t'menu_icon'          => 'dashicons-portfolio',
+\t\t'supports'           => array( 'title', 'editor', 'thumbnail', 'excerpt', 'revisions' ),
+\t);
+
+\tregister_post_type( '${c.prefix}_project', $args );
+}
+add_action( 'init', '${c.prefix}_register_post_types' );
+
+/**
+ * Flush rewrite rules on theme activation.
+ */
+function ${c.prefix}_rewrite_flush() {
+\t${c.prefix}_register_post_types();
+\tflush_rewrite_rules();
+}
+add_action( 'after_switch_theme', '${c.prefix}_rewrite_flush' );
+`;
+}
+
+function genTaxonomy(c) {
+  return `<?php
+/**
+ * Custom Taxonomies for ${c.name}.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+/**
+ * Register custom taxonomies.
+ */
+function ${c.prefix}_register_taxonomies() {
+
+\t$labels = array(
+\t\t'name'              => _x( 'Project Categories', 'taxonomy general name', '${c.slug}' ),
+\t\t'singular_name'     => _x( 'Project Category', 'taxonomy singular name', '${c.slug}' ),
+\t\t'search_items'      => esc_html__( 'Search Categories', '${c.slug}' ),
+\t\t'all_items'         => esc_html__( 'All Categories', '${c.slug}' ),
+\t\t'parent_item'       => esc_html__( 'Parent Category', '${c.slug}' ),
+\t\t'parent_item_colon' => esc_html__( 'Parent Category:', '${c.slug}' ),
+\t\t'edit_item'         => esc_html__( 'Edit Category', '${c.slug}' ),
+\t\t'update_item'       => esc_html__( 'Update Category', '${c.slug}' ),
+\t\t'add_new_item'      => esc_html__( 'Add New Category', '${c.slug}' ),
+\t\t'new_item_name'     => esc_html__( 'New Category Name', '${c.slug}' ),
+\t\t'menu_name'         => esc_html__( 'Categories', '${c.slug}' ),
+\t);
+
+\t$args = array(
+\t\t'hierarchical'      => true,
+\t\t'labels'            => $labels,
+\t\t'show_ui'           => true,
+\t\t'show_admin_column' => true,
+\t\t'show_in_rest'      => true,
+\t\t'query_var'         => true,
+\t\t'rewrite'           => array( 'slug' => 'project-category' ),
+\t);
+
+\tregister_taxonomy( '${c.prefix}_project_cat', array( '${c.prefix}_project' ), $args );
+}
+add_action( 'init', '${c.prefix}_register_taxonomies' );
+`;
+}
+
+function genBlockPatterns(c) {
+  return `<?php
+/**
+ * Block Patterns for ${c.name}.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+/**
+ * Register block pattern category.
+ */
+function ${c.prefix}_register_block_pattern_category() {
+\tregister_block_pattern_category(
+\t\t'${c.slug}',
+\t\tarray( 'label' => esc_html__( '${c.name}', '${c.slug}' ) )
+\t);
+}
+add_action( 'init', '${c.prefix}_register_block_pattern_category' );
+
+/**
+ * Register block patterns.
+ */
+function ${c.prefix}_register_block_patterns() {
+
+\t// Hero Section.
+\tregister_block_pattern(
+\t\t'${c.slug}/hero-section',
+\t\tarray(
+\t\t\t'title'       => esc_html__( 'Hero Section', '${c.slug}' ),
+\t\t\t'description' => esc_html__( 'A hero section with heading, text and button.', '${c.slug}' ),
+\t\t\t'categories'  => array( '${c.slug}' ),
+\t\t\t'content'     => '<!-- wp:group {"align":"full","style":{"spacing":{"padding":{"top":"4rem","bottom":"4rem","left":"2rem","right":"2rem"}}},"layout":{"type":"constrained"}} -->
+<div class="wp-block-group alignfull" style="padding-top:4rem;padding-right:2rem;padding-bottom:4rem;padding-left:2rem">
+<!-- wp:heading {"textAlign":"center","level":1} -->
+<h1 class="wp-block-heading has-text-align-center">' . esc_html__( 'Welcome to Your Site', '${c.slug}' ) . '</h1>
+<!-- /wp:heading -->
+<!-- wp:paragraph {"align":"center"} -->
+<p class="has-text-align-center">' . esc_html__( 'A brief description of what your site is about.', '${c.slug}' ) . '</p>
+<!-- /wp:paragraph -->
+<!-- wp:buttons {"layout":{"type":"flex","justifyContent":"center"}} -->
+<div class="wp-block-buttons">
+<!-- wp:button -->
+<div class="wp-block-button"><a class="wp-block-button__link wp-element-button">' . esc_html__( 'Get Started', '${c.slug}' ) . '</a></div>
+<!-- /wp:button -->
+</div>
+<!-- /wp:buttons -->
+</div>
+<!-- /wp:group -->',
+\t\t)
+\t);
+
+\t// Two Column Text.
+\tregister_block_pattern(
+\t\t'${c.slug}/two-column-text',
+\t\tarray(
+\t\t\t'title'       => esc_html__( 'Two Column Text', '${c.slug}' ),
+\t\t\t'description' => esc_html__( 'Two columns of text side by side.', '${c.slug}' ),
+\t\t\t'categories'  => array( '${c.slug}' ),
+\t\t\t'content'     => '<!-- wp:columns -->
+<div class="wp-block-columns">
+<!-- wp:column -->
+<div class="wp-block-column">
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">' . esc_html__( 'Column One', '${c.slug}' ) . '</h3>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>' . esc_html__( 'Add your content here. This is a placeholder for your text.', '${c.slug}' ) . '</p>
+<!-- /wp:paragraph -->
+</div>
+<!-- /wp:column -->
+<!-- wp:column -->
+<div class="wp-block-column">
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">' . esc_html__( 'Column Two', '${c.slug}' ) . '</h3>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>' . esc_html__( 'Add your content here. This is a placeholder for your text.', '${c.slug}' ) . '</p>
+<!-- /wp:paragraph -->
+</div>
+<!-- /wp:column -->
+</div>
+<!-- /wp:columns -->',
+\t\t)
+\t);
+}
+add_action( 'init', '${c.prefix}_register_block_patterns' );
+`;
+}
+
+function genWooCommerce(c) {
+  return `<?php
+/**
+ * WooCommerce integration for ${c.name}.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+\texit;
+}
+
+/**
+ * WooCommerce setup.
+ */
+function ${c.prefix}_woocommerce_setup() {
+\tadd_theme_support( 'woocommerce' );
+\tadd_theme_support( 'wc-product-gallery-zoom' );
+\tadd_theme_support( 'wc-product-gallery-lightbox' );
+\tadd_theme_support( 'wc-product-gallery-slider' );
+}
+add_action( 'after_setup_theme', '${c.prefix}_woocommerce_setup' );
+
+/**
+ * Disable default WooCommerce styles selectively.
+ *
+ * @param array $enqueue_styles Styles to enqueue.
+ * @return array
+ */
+function ${c.prefix}_dequeue_wc_styles( $enqueue_styles ) {
+\t// Uncomment below to disable default WC stylesheet.
+\t// unset( $enqueue_styles['woocommerce-general'] );
+\treturn $enqueue_styles;
+}
+add_filter( 'woocommerce_enqueue_styles', '${c.prefix}_dequeue_wc_styles' );
+
+/**
+ * WooCommerce wrapper before.
+ */
+function ${c.prefix}_woocommerce_wrapper_before() {
+\techo '<main id="primary" class="site-content"><div class="woocommerce-container">';
+}
+remove_action( 'woocommerce_before_main_content', 'woocommerce_output_content_wrapper', 10 );
+add_action( 'woocommerce_before_main_content', '${c.prefix}_woocommerce_wrapper_before' );
+
+/**
+ * WooCommerce wrapper after.
+ */
+function ${c.prefix}_woocommerce_wrapper_after() {
+\techo '</div></main>';
+}
+remove_action( 'woocommerce_after_main_content', 'woocommerce_output_content_wrapper_end', 10 );
+add_action( 'woocommerce_after_main_content', '${c.prefix}_woocommerce_wrapper_after' );
+
+${c.sidebar ? `/**
+ * Remove WooCommerce sidebar.
+ */
+remove_action( 'woocommerce_sidebar', 'woocommerce_get_sidebar', 10 );
+
+/**
+ * Add theme sidebar to WooCommerce.
+ */
+function ${c.prefix}_woocommerce_sidebar() {
+\tget_sidebar();
+}
+add_action( 'woocommerce_sidebar', '${c.prefix}_woocommerce_sidebar' );` : '// WooCommerce sidebar removed - no sidebar selected.'}
+
+/**
+ * Customise products per page.
+ *
+ * @return int
+ */
+function ${c.prefix}_wc_products_per_page() {
+\treturn 12;
+}
+add_filter( 'loop_shop_per_page', '${c.prefix}_wc_products_per_page' );
+`;
+}
+
+function genThemeJSON(c) {
+  return JSON.stringify({
+    "$schema": "https://schemas.wp.org/trunk/theme.json",
+    "version": 3,
+    "settings": {
+      "color": {
+        "palette": [
+          { "slug": "primary", "color": "#2563eb", "name": "Primary" },
+          { "slug": "secondary", "color": "#475569", "name": "Secondary" },
+          { "slug": "foreground", "color": "#1e293b", "name": "Foreground" },
+          { "slug": "background", "color": "#ffffff", "name": "Background" },
+          { "slug": "border", "color": "#e2e8f0", "name": "Border" }
+        ]
+      },
+      "typography": {
+        "fontSizes": [
+          { "slug": "small", "size": "0.875rem", "name": "Small" },
+          { "slug": "medium", "size": "1rem", "name": "Medium" },
+          { "slug": "large", "size": "1.25rem", "name": "Large" },
+          { "slug": "x-large", "size": "1.75rem", "name": "Extra Large" }
+        ]
+      },
+      "spacing": {
+        "units": ["px", "em", "rem", "%", "vw"]
+      },
+      "layout": {
+        "contentSize": "800px",
+        "wideSize": "1200px"
+      }
+    }
+  }, null, '\t');
+}
+
+function genNavigationJS(c) {
+  return `/**
+ * Navigation toggle for mobile.
+ *
+ * @package ${c.name}
+ */
+( function() {
+\t'use strict';
+
+\tconst siteNavigation = document.getElementById( 'site-navigation' );
+\tif ( ! siteNavigation ) {
+\t\treturn;
+\t}
+
+\tconst button = siteNavigation.querySelector( '.menu-toggle' );
+\tif ( ! button ) {
+\t\treturn;
+\t}
+
+\tconst menu = siteNavigation.querySelector( 'ul' );
+\tif ( ! menu ) {
+\t\tbutton.style.display = 'none';
+\t\treturn;
+\t}
+
+\tif ( ! menu.classList.contains( 'nav-menu' ) ) {
+\t\tmenu.classList.add( 'nav-menu' );
+\t}
+
+\tbutton.addEventListener( 'click', function() {
+\t\tsiteNavigation.classList.toggle( 'toggled' );
+
+\t\tif ( button.getAttribute( 'aria-expanded' ) === 'true' ) {
+\t\t\tbutton.setAttribute( 'aria-expanded', 'false' );
+\t\t} else {
+\t\t\tbutton.setAttribute( 'aria-expanded', 'true' );
+\t\t}
+\t} );
+
+\t// Close menu on Escape.
+\tdocument.addEventListener( 'keydown', function( event ) {
+\t\tif ( event.key === 'Escape' ) {
+\t\t\tif ( siteNavigation.classList.contains( 'toggled' ) ) {
+\t\t\t\tsiteNavigation.classList.remove( 'toggled' );
+\t\t\t\tbutton.setAttribute( 'aria-expanded', 'false' );
+\t\t\t\tbutton.focus();
+\t\t\t}
+\t\t}
+\t} );
+} )();
+`;
+}
+
+function genEditorCSS(c) {
+  return `/* Editor Styles for ${c.name} */
+.editor-styles-wrapper {
+\tfont-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+\tfont-size: 16px;
+\tline-height: 1.6;
+\tcolor: #1e293b;
+}
+
+.editor-styles-wrapper a {
+\tcolor: #2563eb;
+}
+`;
+}
+
+function genMainCSS(c) {
+  let mobileNav = '';
+  if (!c.headerBuilder) {
+    mobileNav = `
+/* Mobile Navigation */
+.menu-toggle {
+\tdisplay: none;
+\tbackground: var(--${c.slug}-primary);
+\tcolor: #fff;
+\tborder: none;
+\tpadding: 0.5rem 1rem;
+\tborder-radius: 4px;
+\tfont-size: 0.9rem;
+\tcursor: pointer;
+}
+
+@media (max-width: 768px) {
+\t.menu-toggle {
+\t\tdisplay: block;
+\t}
+
+\t.main-navigation ul {
+\t\tdisplay: none;
+\t\twidth: 100%;
+\t\tflex-direction: column;
+\t\tgap: 0;
+\t}
+
+\t.main-navigation.toggled ul {
+\t\tdisplay: flex;
+\t}
+
+\t.main-navigation.toggled li {
+\t\tpadding: 0.5rem 0;
+\t\tborder-bottom: 1px solid var(--${c.slug}-border);
+\t}
+
+\t.site-header .wrap {
+\t\tflex-wrap: wrap;
+\t}
+}`;
+  }
+
+  return `/* Main additional styles for ${c.name} */
+${mobileNav}
+
+/* Breadcrumbs */
+.breadcrumbs ol {
+\tlist-style: none;
+\tpadding: 0;
+\tmargin: 0 0 1.5rem;
+\tdisplay: flex;
+\tflex-wrap: wrap;
+\tgap: 0.25rem;
+\tfont-size: 0.875rem;
+}
+
+.breadcrumbs li:not(:last-child)::after {
+\tcontent: '/';
+\tmargin-left: 0.5rem;
+\tcolor: var(--${c.slug}-secondary);
+}
+
+/* Pagination */
+.nav-links {
+\tdisplay: flex;
+\tjustify-content: center;
+\tgap: 0.5rem;
+\tmargin-top: 2rem;
+}
+
+.page-numbers {
+\tpadding: 0.5rem 0.75rem;
+\tborder: 1px solid var(--${c.slug}-border);
+\tborder-radius: 4px;
+\tcolor: var(--${c.slug}-text);
+}
+
+.page-numbers.current {
+\tbackground: var(--${c.slug}-primary);
+\tcolor: #fff;
+\tborder-color: var(--${c.slug}-primary);
+}
+
+/* Widgets */
+.widget {
+\tmargin-bottom: 1.5rem;
+}
+
+.widget-title {
+\tfont-size: 1.1rem;
+\tmargin-bottom: 0.75rem;
+\tpadding-bottom: 0.5rem;
+\tborder-bottom: 2px solid var(--${c.slug}-primary);
+}
+
+/* Accessibility */
+.skip-link {
+\tposition: absolute;
+\tleft: -9999px;
+}
+`;
+}
+
+function genHeaderBuilderCSS(c) {
+  return `/* Header Builder Styles for ${c.name} */
+
+/* --- Header Layouts --- */
+.site-header .wrap {
+\tmax-width: var(--${c.slug}-max-width);
+\tmargin: 0 auto;
+\tdisplay: flex;
+\talign-items: center;
+\tjustify-content: space-between;
+\tflex-wrap: wrap;
+\tgap: 1rem;
+}
+
+/* Logo Left / Nav Right (default) */
+.header-layout-logo-left .wrap {
+\tflex-direction: row;
+}
+
+/* Logo Centre / Nav Below */
+.header-layout-logo-center .wrap {
+\tflex-direction: column;
+\talign-items: center;
+\ttext-align: center;
+}
+
+.header-layout-logo-center .main-navigation {
+\torder: 2;
+}
+
+/* Nav Left / Logo Right */
+.header-layout-nav-left .wrap {
+\tflex-direction: row-reverse;
+}
+
+/* Stacked (centred) */
+.header-layout-stacked .wrap {
+\tflex-direction: column;
+\talign-items: center;
+\ttext-align: center;
+}
+
+.header-layout-stacked .header-extras {
+\torder: 3;
+}
+
+/* --- Sticky Header --- */
+.header-sticky {
+\tposition: sticky;
+\ttop: 0;
+\tz-index: 999;
+\ttransition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.header-sticky-shadow.scrolled {
+\tbox-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* Smart sticky: slides out of view on scroll down */
+.header-sticky-smart.header-hidden {
+\ttransform: translateY(-100%);
+}
+
+/* --- Transparent Header --- */
+.header-transparent {
+\tposition: absolute;
+\ttop: 0;
+\tleft: 0;
+\tright: 0;
+\tz-index: 999;
+\tbackground-color: transparent !important;
+\tborder-bottom: none !important;
+}
+
+.header-transparent .site-title a,
+.header-transparent .site-description,
+.header-transparent .main-navigation a,
+.header-transparent .header-search-toggle,
+.header-transparent .menu-toggle {
+\tcolor: #ffffff;
+}
+
+.header-transparent .header-cta {
+\tbackground-color: #ffffff !important;
+\tcolor: var(--${c.slug}-primary) !important;
+}
+
+/* --- Header Extras (Search + CTA) --- */
+.header-extras {
+\tdisplay: flex;
+\talign-items: center;
+\tgap: 0.75rem;
+}
+
+.header-search-toggle {
+\tbackground: none;
+\tborder: none;
+\tcursor: pointer;
+\tcolor: inherit;
+\tpadding: 6px;
+\tborder-radius: 4px;
+\ttransition: background 0.2s;
+}
+
+.header-search-toggle:hover {
+\tbackground: rgba(0, 0, 0, 0.06);
+}
+
+.header-search-form {
+\tdisplay: none;
+\tpadding: 1rem;
+\tborder-top: 1px solid var(--${c.slug}-border);
+\tbackground: inherit;
+}
+
+.header-search-form.active {
+\tdisplay: block;
+}
+
+.header-search-form .search-form {
+\tdisplay: flex;
+\tgap: 0.5rem;
+\tmax-width: 500px;
+\tmargin: 0 auto;
+}
+
+.header-search-form .search-field {
+\tflex: 1;
+\tpadding: 0.5rem 0.75rem;
+\tborder: 1px solid var(--${c.slug}-border);
+\tborder-radius: 4px;
+\tfont-size: 0.95rem;
+}
+
+.header-cta {
+\tdisplay: inline-flex;
+\talign-items: center;
+\tpadding: 0.5rem 1.25rem;
+\tcolor: #ffffff;
+\tborder-radius: 5px;
+\tfont-size: 0.9rem;
+\tfont-weight: 600;
+\ttext-decoration: none;
+\ttransition: opacity 0.2s;
+\twhite-space: nowrap;
+}
+
+.header-cta:hover {
+\topacity: 0.85;
+\ttext-decoration: none;
+\tcolor: #ffffff;
+}
+
+/* --- Hamburger Icon --- */
+.menu-toggle {
+\tdisplay: none;
+\tbackground: none;
+\tborder: none;
+\tcursor: pointer;
+\tpadding: 8px;
+\tcolor: inherit;
+}
+
+.hamburger-icon {
+\tdisplay: flex;
+\tflex-direction: column;
+\tgap: 5px;
+\twidth: 22px;
+}
+
+.hamburger-icon span {
+\tdisplay: block;
+\theight: 2px;
+\tbackground: currentColor;
+\tborder-radius: 2px;
+\ttransition: all 0.3s ease;
+}
+
+.menu-toggle[aria-expanded="true"] .hamburger-icon span:nth-child(1) {
+\ttransform: rotate(45deg) translate(5px, 5px);
+}
+
+.menu-toggle[aria-expanded="true"] .hamburger-icon span:nth-child(2) {
+\topacity: 0;
+}
+
+.menu-toggle[aria-expanded="true"] .hamburger-icon span:nth-child(3) {
+\ttransform: rotate(-45deg) translate(5px, -5px);
+}
+
+/* --- Mobile Menu Panel (Slide / Fullscreen) --- */
+.mobile-menu-overlay {
+\tdisplay: none;
+\tposition: fixed;
+\ttop: 0;
+\tleft: 0;
+\tright: 0;
+\tbottom: 0;
+\tbackground: rgba(0, 0, 0, 0.5);
+\tz-index: 1000;
+\topacity: 0;
+\ttransition: opacity 0.3s ease;
+}
+
+.mobile-menu-overlay.active {
+\tdisplay: block;
+\topacity: 1;
+}
+
+.mobile-menu-panel {
+\tposition: fixed;
+\tdisplay: none;
+\ttop: 0;
+\tbottom: 0;
+\tz-index: 1001;
+\tbackground: var(--${c.slug}-bg);
+\toverflow-y: auto;
+\ttransition: transform 0.3s ease;
+}
+
+.mobile-menu-panel.mobile-menu-slide-left {
+\tleft: 0;
+\twidth: 280px;
+\tdisplay: block;
+\ttransform: translateX(-100%);
+}
+
+.mobile-menu-panel.mobile-menu-slide-left.active {
+\ttransform: translateX(0);
+}
+
+.mobile-menu-panel.mobile-menu-fullscreen {
+\tleft: 0;
+\tright: 0;
+\twidth: 100%;
+\tdisplay: block;
+\ttransform: translateY(-100%);
+}
+
+.mobile-menu-panel.mobile-menu-fullscreen.active {
+\ttransform: translateY(0);
+}
+
+.mobile-menu-panel-header {
+\tdisplay: flex;
+\tjustify-content: flex-end;
+\tpadding: 1rem;
+}
+
+.mobile-menu-close {
+\tbackground: none;
+\tborder: none;
+\tcursor: pointer;
+\tcolor: var(--${c.slug}-text);
+\tpadding: 4px;
+}
+
+.mobile-nav-list {
+\tlist-style: none;
+\tmargin: 0;
+\tpadding: 0 1rem;
+}
+
+.mobile-nav-list li {
+\tborder-bottom: 1px solid var(--${c.slug}-border);
+}
+
+.mobile-nav-list a {
+\tdisplay: block;
+\tpadding: 0.75rem 0;
+\tcolor: var(--${c.slug}-text);
+\tfont-size: 1.1rem;
+\ttext-decoration: none;
+}
+
+/* --- Footer Builder Styles --- */
+.site-footer {
+\tmargin-top: auto;
+}
+
+.site-footer .wrap {
+\tmax-width: var(--${c.slug}-max-width);
+\tmargin: 0 auto;
+}
+
+.footer-widgets-wrap {
+\tpadding: 0 1rem;
+}
+
+.footer-widgets {
+\tdisplay: grid;
+\tgap: 2rem;
+}
+
+.footer-widget-area .widget-title {
+\tborder-bottom-color: rgba(255, 255, 255, 0.15);
+}
+
+.footer-bar {
+\tborder-top: 1px solid rgba(255, 255, 255, 0.1);
+\tpadding: 1.25rem 1rem;
+\tmargin-top: 1.5rem;
+}
+
+.footer-bar .wrap {
+\tdisplay: flex;
+\talign-items: center;
+\tjustify-content: space-between;
+\tflex-wrap: wrap;
+\tgap: 1rem;
+}
+
+.footer-layout-centered .footer-bar .wrap {
+\tjustify-content: center;
+\ttext-align: center;
+\tflex-direction: column;
+}
+
+.footer-navigation ul {
+\tlist-style: none;
+\tmargin: 0;
+\tpadding: 0;
+\tdisplay: flex;
+\tgap: 1.5rem;
+\tflex-wrap: wrap;
+}
+
+.footer-navigation a {
+\tfont-size: 0.9rem;
+\ttext-decoration: none;
+}
+
+.footer-navigation a:hover {
+\ttext-decoration: underline;
+}
+
+.site-info {
+\tfont-size: 0.9rem;
+}
+
+/* --- Back to Top --- */
+.back-to-top {
+\tposition: fixed;
+\tbottom: 2rem;
+\tright: 2rem;
+\twidth: 44px;
+\theight: 44px;
+\tborder-radius: 50%;
+\tbackground: var(--${c.slug}-primary);
+\tcolor: #ffffff;
+\tborder: none;
+\tcursor: pointer;
+\tdisplay: flex;
+\talign-items: center;
+\tjustify-content: center;
+\topacity: 0;
+\tvisibility: hidden;
+\ttransition: all 0.3s ease;
+\tz-index: 99;
+\tbox-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.back-to-top.visible {
+\topacity: 1;
+\tvisibility: visible;
+}
+
+.back-to-top:hover {
+\ttransform: translateY(-2px);
+\tbox-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 768px) {
+\t.footer-bar .wrap {
+\t\tjustify-content: center;
+\t\ttext-align: center;
+\t\tflex-direction: column;
+\t}
+
+\t.back-to-top {
+\t\tbottom: 1rem;
+\t\tright: 1rem;
+\t}
+}
+`;
+}
+
+function genHeaderBuilderJS(c) {
+  return `/**
+ * Header & Footer Builder JavaScript for ${c.name}.
+ *
+ * Handles: sticky header shadow, search toggle, mobile menu panel, back-to-top.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+(function() {
+\t'use strict';
+
+\t// --- Sticky header scroll shadow + smart sticky ---
+\tvar header = document.getElementById('masthead');
+\tif (header && (header.classList.contains('header-sticky-shadow') || header.classList.contains('header-sticky-smart'))) {
+\t\tvar scrollThreshold = 10;
+\t\tvar lastScrollY = 0;
+\t\tvar ticking = false;
+\t\tvar isSmart = header.classList.contains('header-sticky-smart');
+
+\t\tfunction updateStickyState() {
+\t\t\tvar currentY = window.scrollY;
+
+\t\t\t// Shadow on scroll.
+\t\t\tif (header.classList.contains('header-sticky-shadow')) {
+\t\t\t\tif (currentY > scrollThreshold) {
+\t\t\t\t\theader.classList.add('scrolled');
+\t\t\t\t} else {
+\t\t\t\t\theader.classList.remove('scrolled');
+\t\t\t\t}
+\t\t\t}
+
+\t\t\t// Smart sticky: hide on scroll down, show on scroll up.
+\t\t\tif (isSmart) {
+\t\t\t\tif (currentY > lastScrollY && currentY > 80) {
+\t\t\t\t\theader.classList.add('header-hidden');
+\t\t\t\t} else {
+\t\t\t\t\theader.classList.remove('header-hidden');
+\t\t\t\t}
+\t\t\t}
+
+\t\t\tlastScrollY = currentY;
+\t\t\tticking = false;
+\t\t}
+
+\t\twindow.addEventListener('scroll', function() {
+\t\t\tif (!ticking) {
+\t\t\t\twindow.requestAnimationFrame(updateStickyState);
+\t\t\t\tticking = true;
+\t\t\t}
+\t\t}, { passive: true });
+\t}
+
+\t// --- Search toggle ---
+\tvar searchToggle = document.querySelector('.header-search-toggle');
+\tvar searchForm = document.querySelector('.header-search-form');
+\tif (searchToggle && searchForm) {
+\t\tsearchToggle.addEventListener('click', function() {
+\t\t\tvar isActive = searchForm.classList.toggle('active');
+\t\t\tsearchForm.setAttribute('aria-hidden', !isActive);
+\t\t\tif (isActive) {
+\t\t\t\tvar input = searchForm.querySelector('.search-field');
+\t\t\t\tif (input) input.focus();
+\t\t\t}
+\t\t});
+\t}
+
+\t// --- Mobile menu toggle (dropdown mode) ---
+\tvar menuToggle = document.querySelector('.menu-toggle');
+\tvar navigation = document.getElementById('site-navigation');
+\tif (menuToggle && navigation) {
+\t\tmenuToggle.addEventListener('click', function() {
+\t\t\tvar expanded = menuToggle.getAttribute('aria-expanded') === 'true';
+\t\t\tmenuToggle.setAttribute('aria-expanded', !expanded);
+\t\t\tnavigation.classList.toggle('toggled');
+
+\t\t\t// If slide/fullscreen panel exists, use that instead.
+\t\t\tvar panel = document.getElementById('mobile-menu-panel');
+\t\t\tvar overlay = document.querySelector('.mobile-menu-overlay');
+\t\t\tif (panel) {
+\t\t\t\tvar isOpen = panel.classList.toggle('active');
+\t\t\t\tpanel.setAttribute('aria-hidden', !isOpen);
+\t\t\t\tif (overlay) overlay.classList.toggle('active', isOpen);
+\t\t\t\tdocument.body.style.overflow = isOpen ? 'hidden' : '';
+\t\t\t}
+\t\t});
+\t}
+
+\t// --- Mobile menu close button ---
+\tvar closeBtn = document.querySelector('.mobile-menu-close');
+\tif (closeBtn) {
+\t\tcloseBtn.addEventListener('click', function() {
+\t\t\tvar panel = document.getElementById('mobile-menu-panel');
+\t\t\tvar overlay = document.querySelector('.mobile-menu-overlay');
+\t\t\tif (panel) {
+\t\t\t\tpanel.classList.remove('active');
+\t\t\t\tpanel.setAttribute('aria-hidden', 'true');
+\t\t\t}
+\t\t\tif (overlay) overlay.classList.remove('active');
+\t\t\tdocument.body.style.overflow = '';
+\t\t\tif (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
+\t\t});
+\t}
+
+\t// --- Overlay click closes mobile menu ---
+\tvar overlay = document.querySelector('.mobile-menu-overlay');
+\tif (overlay) {
+\t\toverlay.addEventListener('click', function() {
+\t\t\tvar panel = document.getElementById('mobile-menu-panel');
+\t\t\tif (panel) {
+\t\t\t\tpanel.classList.remove('active');
+\t\t\t\tpanel.setAttribute('aria-hidden', 'true');
+\t\t\t}
+\t\t\toverlay.classList.remove('active');
+\t\t\tdocument.body.style.overflow = '';
+\t\t\tif (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
+\t\t});
+\t}
+
+\t// --- Back to top ---
+\tvar backToTop = document.getElementById('${c.slug}-back-to-top');
+\tif (backToTop) {
+\t\tvar bttTicking = false;
+
+\t\tfunction updateBackToTop() {
+\t\t\tif (window.scrollY > 300) {
+\t\t\t\tbackToTop.classList.add('visible');
+\t\t\t} else {
+\t\t\t\tbackToTop.classList.remove('visible');
+\t\t\t}
+\t\t\tbttTicking = false;
+\t\t}
+
+\t\twindow.addEventListener('scroll', function() {
+\t\t\tif (!bttTicking) {
+\t\t\t\twindow.requestAnimationFrame(updateBackToTop);
+\t\t\t\tbttTicking = true;
+\t\t\t}
+\t\t}, { passive: true });
+
+\t\tbackToTop.addEventListener('click', function() {
+\t\t\twindow.scrollTo({ top: 0, behavior: 'smooth' });
+\t\t});
+\t}
+
+\t// --- Escape key closes mobile menu ---
+\tdocument.addEventListener('keydown', function(e) {
+\t\tif (e.key === 'Escape') {
+\t\t\tvar panel = document.getElementById('mobile-menu-panel');
+\t\t\tvar overlay = document.querySelector('.mobile-menu-overlay');
+\t\t\tvar searchFormEl = document.querySelector('.header-search-form');
+\t\t\tif (panel && panel.classList.contains('active')) {
+\t\t\t\tpanel.classList.remove('active');
+\t\t\t\tpanel.setAttribute('aria-hidden', 'true');
+\t\t\t\tif (overlay) overlay.classList.remove('active');
+\t\t\t\tdocument.body.style.overflow = '';
+\t\t\t\tif (menuToggle) {
+\t\t\t\t\tmenuToggle.setAttribute('aria-expanded', 'false');
+\t\t\t\t\tmenuToggle.focus();
+\t\t\t\t}
+\t\t\t}
+\t\t\tif (searchFormEl && searchFormEl.classList.contains('active')) {
+\t\t\t\tsearchFormEl.classList.remove('active');
+\t\t\t\tsearchFormEl.setAttribute('aria-hidden', 'true');
+\t\t\t\tif (searchToggle) searchToggle.focus();
+\t\t\t}
+\t\t}
+\t});
+})();
+`;
+}
+
+function genCustomizerPreviewJS(c) {
+  return `/**
+ * Customizer live preview for ${c.name}.
+ *
+ * @package ${c.name}
+ * @since   ${c.version}
+ */
+( function( $ ) {
+\t'use strict';
+
+\t// --- Theme Colours ---
+\twp.customize( '${c.prefix}_primary_colour', function( value ) {
+\t\tvalue.bind( function( to ) {
+\t\t\tdocument.documentElement.style.setProperty( '--${c.slug}-primary', to );
+\t\t} );
+\t} );
+
+\twp.customize( '${c.prefix}_secondary_colour', function( value ) {
+\t\tvalue.bind( function( to ) {
+\t\t\tdocument.documentElement.style.setProperty( '--${c.slug}-secondary', to );
+\t\t} );
+\t} );
+
+\t// --- Typography ---
+\twp.customize( '${c.prefix}_body_font_size', function( value ) {
+\t\tvalue.bind( function( to ) {
+\t\t\tdocument.body.style.fontSize = parseInt( to, 10 ) + 'px';
+\t\t} );
+\t} );
+` + (c.headerBuilder ? `
+\t// --- Header Builder ---
+\twp.customize( '${c.prefix}_header_bg_colour', function( value ) {
+\t\tvalue.bind( function( to ) {
+\t\t\tvar header = document.getElementById( 'masthead' );
+\t\t\tif ( header ) header.style.backgroundColor = to;
+\t\t} );
+\t} );
+
+\twp.customize( '${c.prefix}_header_text_colour', function( value ) {
+\t\tvalue.bind( function( to ) {
+\t\t\tvar els = document.querySelectorAll( '.site-header .site-title a, .site-header .site-description' );
+\t\t\tels.forEach( function( el ) { el.style.color = to; } );
+\t\t} );
+\t} );
+
+\twp.customize( '${c.prefix}_header_link_colour', function( value ) {
+\t\tvalue.bind( function( to ) {
+\t\t\tvar els = document.querySelectorAll( '.site-header .main-navigation a' );
+\t\t\tels.forEach( function( el ) { el.style.color = to; } );
+\t\t} );
+\t} );
+
+\t// --- Footer Builder ---
+\twp.customize( '${c.prefix}_footer_bg_colour', function( value ) {
+\t\tvalue.bind( function( to ) {
+\t\t\tvar footer = document.getElementById( 'colophon' );
+\t\t\tif ( footer ) footer.style.backgroundColor = to;
+\t\t} );
+\t} );
+
+\twp.customize( '${c.prefix}_footer_text_colour', function( value ) {
+\t\tvalue.bind( function( to ) {
+\t\t\tvar footer = document.getElementById( 'colophon' );
+\t\t\tif ( footer ) {
+\t\t\t\tfooter.style.color = to;
+\t\t\t\tvar titles = footer.querySelectorAll( '.widget-title' );
+\t\t\t\ttitles.forEach( function( el ) { el.style.color = to; } );
+\t\t\t}
+\t\t} );
+\t} );
+
+\twp.customize( '${c.prefix}_footer_link_colour', function( value ) {
+\t\tvalue.bind( function( to ) {
+\t\t\tvar links = document.querySelectorAll( '.site-footer a' );
+\t\t\tlinks.forEach( function( el ) { el.style.color = to; } );
+\t\t} );
+\t} );
+` : '') + `
+} )( jQuery );
+`;
+}
+
+function genReadme(c) {
+  let builderSection = '';
+  if (c.headerBuilder) {
+    builderSection = `
+## Header & Footer Builder
+
+This theme includes a Customizer-driven header and footer builder. Go to **Appearance > Customize** and look for the **Header Builder** and **Footer Builder** panels.
+
+### Header Builder Features
+- **Layout presets:** Logo Left, Logo Centre, Nav Left, Stacked
+- **Sticky header** with optional scroll shadow
+- **Transparent header** on the front page
+- **Search icon toggle** with expanding search form
+- **CTA button** with custom text, URL and colour
+- **Mobile menu styles:** Dropdown, Slide-In, Full Screen Overlay
+- **Custom mobile breakpoint**
+
+### Footer Builder Features
+- **Layout presets:** Widget Columns, Centred Minimal, Two Row
+- **1–4 widget columns** (controlled via Customizer)
+- **Custom colours:** background, text, links
+- **Custom copyright text** with {year} and {site} placeholders
+- **Footer navigation** menu
+- **Back to top button**
+`;
+  }
+
+  return `# ${c.name}
+
+${c.description}
+
+## Details
+
+- **Version:** ${c.version}
+- **Author:** ${c.author}
+- **License:** ${c.license}
+- **Requires WordPress:** ${c.minWP}+
+- **Requires PHP:** ${c.minPHP}+
+
+## Security
+
+This theme was generated by the MBR Theme Generator with security-first defaults:
+
+- Output escaping (esc_html, esc_attr, esc_url, wp_kses_post) on every echo
+- Nonce verification on all forms
+- Input sanitisation throughout
+- Prepared SQL statements for any database queries
+- ABSPATH direct-access prevention on every PHP file
+- Properly enqueued assets (no hardcoded scripts/styles)
+- No use of eval() or extract()
+- Security headers (X-Content-Type-Options, X-Frame-Options, Referrer-Policy)
+- WordPress version number removed from head
+- XML-RPC disabled by default
+${builderSection}
+## Structure
+
+\`\`\`
+${c.slug}/
+├── assets/
+│   ├── css/
+│   │   ├── main.css
+│   │   ${c.headerBuilder ? '├── header-builder.css' : ''}
+│   │   ${c.blockEditor ? '└── editor-style.css' : ''}
+│   └── js/
+│       ├── navigation.js
+│       ${c.headerBuilder ? '└── header-builder.js' : ''}
+├── inc/
+│   ├── template-tags.php
+│   ${c.customizer ? '├── customizer.php' : ''}
+│   ${c.breadcrumbs ? '├── breadcrumbs.php' : ''}
+│   ${c.cpt ? '├── custom-post-types.php' : ''}
+│   ${c.taxonomy ? '├── custom-taxonomies.php' : ''}
+│   ${c.blockPatterns ? '├── block-patterns.php' : ''}
+│   ${c.type === 'woocommerce' ? '└── woocommerce.php' : ''}
+├── template-parts/
+│   ├── content.php
+│   └── content-none.php
+├── functions.php
+├── header.php
+├── footer.php
+├── index.php
+├── single.php
+├── page.php
+├── archive.php
+├── search.php
+├── 404.php
+├── comments.php
+${c.sidebar ? '├── sidebar.php' : ''}
+${c.blockEditor ? '├── theme.json' : ''}
+├── screenshot.png
+├── style.css
+└── README.md
+\`\`\`
+
+## Generated by
+
+[MBR Theme Generator](https://littlewebshack.com) by Robert Palmer
+`;
+}
+
+// --- Screenshot Generator ---
+async function generateScreenshot(c) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1200;
+  canvas.height = 900;
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(0, 0, 1200, 900);
+
+  // Accent bar
+  ctx.fillStyle = '#2563eb';
+  ctx.fillRect(0, 0, 1200, 6);
+
+  // Theme name
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 48px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(c.name, 600, 380);
+
+  // Type badge
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '24px -apple-system, BlinkMacSystemFont, sans-serif';
+  const typeLabels = { minimal: 'Minimal Blog Theme', business: 'Business Theme', portfolio: 'Portfolio Theme', woocommerce: 'WooCommerce Theme' };
+  ctx.fillText(typeLabels[c.type] || 'WordPress Theme', 600, 430);
+
+  // Version
+  ctx.fillStyle = '#64748b';
+  ctx.font = '18px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.fillText('v' + c.version + ' • ' + c.author, 600, 480);
+
+  // Footer credit
+  ctx.fillStyle = '#475569';
+  ctx.font = '16px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.fillText('Built with MBR Theme Generator - littlewebshack.com', 600, 840);
+
+  // Shield icon area
+  ctx.fillStyle = '#2563eb';
+  ctx.beginPath();
+  ctx.roundRect(530, 510, 140, 36, 18);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.fillText('Security 10/10', 600, 533);
+
+  return new Promise(resolve => {
+    canvas.toBlob(blob => resolve(blob), 'image/png');
+  });
+}
+
+// --- Generate Theme ---
+async function generateTheme() {
+  const btn = document.getElementById('btnGenerate');
+  btn.classList.add('generating');
+  btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Generating...';
+
+  try {
+    const c = getConfig();
+    const zip = new JSZip();
+    const root = zip.folder(c.slug);
+
+    // Core files
+    root.file('style.css', genStyleCSS(c));
+    root.file('functions.php', genFunctionsPHP(c));
+    root.file('header.php', genHeaderPHP(c));
+    root.file('footer.php', genFooterPHP(c));
+    root.file('index.php', genIndexPHP(c));
+    root.file('single.php', genSinglePHP(c));
+    root.file('page.php', genPagePHP(c));
+    root.file('archive.php', genArchivePHP(c));
+    root.file('search.php', genSearchPHP(c));
+    root.file('404.php', gen404PHP(c));
+    root.file('comments.php', genCommentsPHP(c));
+
+    if (c.sidebar) {
+      root.file('sidebar.php', genSidebarPHP(c));
+    }
+
+    // Template parts
+    const parts = root.folder('template-parts');
+    parts.file('content.php', genContentPart(c));
+    parts.file('content-none.php', genContentNone(c));
+
+    // Inc files
+    const inc = root.folder('inc');
+    let tagFile = genTemplateTags(c);
+    if (c.pagination) {
+      tagFile += genPagination(c);
+    }
+    inc.file('template-tags.php', tagFile);
+
+    if (c.breadcrumbs) inc.file('breadcrumbs.php', genBreadcrumbs(c));
+    if (c.customizer) inc.file('customizer.php', genCustomizer(c));
+    if (c.cpt) inc.file('custom-post-types.php', genCPT(c));
+    if (c.taxonomy) inc.file('custom-taxonomies.php', genTaxonomy(c));
+    if (c.blockPatterns) inc.file('block-patterns.php', genBlockPatterns(c));
+    if (c.type === 'woocommerce') inc.file('woocommerce.php', genWooCommerce(c));
+    if (c.gutenberg) inc.file('gutenberg.php', genGutenbergPHP(c));
+    if (c.elementor) inc.file('elementor.php', genElementorPHP(c));
+    if (c.bricks) inc.file('bricks.php', genBricksPHP(c));
+    if (c.oxygen) inc.file('oxygen.php', genOxygenPHP(c));
+    if (c.beaver) inc.file('beaver-builder.php', genBeaverPHP(c));
+    if (c.wpbakery) inc.file('wpbakery.php', genWPBakeryPHP(c));
+
+    // Page templates (any page builder)
+    if (c.elementor || c.bricks || c.beaver || c.wpbakery) {
+      const pageTpl = root.folder('page-templates');
+      pageTpl.file('template-full-width.php', genFullWidthTemplate(c));
+      pageTpl.file('template-canvas.php', genCanvasTemplate(c));
+    }
+
+    // Assets
+    const css = root.folder('assets/css');
+    css.file('main.css', genMainCSS(c));
+    if (c.blockEditor) {
+      css.file('editor-style.css', genEditorCSS(c));
+    }
+
+    const js = root.folder('assets/js');
+    if (!c.headerBuilder) {
+      js.file('navigation.js', genNavigationJS(c));
+    }
+
+    // Header & Footer Builder assets
+    if (c.headerBuilder) {
+      css.file('header-builder.css', genHeaderBuilderCSS(c));
+      js.file('header-builder.js', genHeaderBuilderJS(c));
+    }
+
+    // Customizer live preview
+    if (c.customizer) {
+      js.file('customizer-preview.js', genCustomizerPreviewJS(c));
+    }
+
+    // Block editor
+    if (c.blockEditor) {
+      root.file('theme.json', genThemeJSON(c));
+    }
+
+    // Languages folder
+    root.folder('languages');
+
+    // README
+    root.file('README.md', genReadme(c));
+
+    // Screenshot
+    const screenshotBlob = await generateScreenshot(c);
+    root.file('screenshot.png', screenshotBlob);
+
+    // Generate and download
+    const content = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(content);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = c.slug + '.zip';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+  } catch (err) {
+    console.error('Generation error:', err);
+    alert('Error generating theme: ' + err.message);
+  }
+
+  btn.classList.remove('generating');
+  btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Generate &amp; Download Theme';
+}
+</script>
+
+</body>
+</html>
