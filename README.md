@@ -2,7 +2,7 @@
 
 **A browser-based WordPress theme scaffolding tool that produces secure, production-ready themes in seconds.**
 
-Version 1.4.2 | Built by [Robert Palmer](https://littlewebshack.com) | Free, no upsells, no premium tier
+Version 1.5.0 | Built by [Robert Palmer](https://littlewebshack.com) | Free, no upsells, no premium tier
 
 ---
 
@@ -40,6 +40,7 @@ All optional, all toggleable:
 - Breadcrumb navigation with Schema.org markup
 - Numbered pagination for archives
 - Post thumbnails with custom size definitions
+- Header / Footer Builder
 
 ### Page Builder Compatibility
 
