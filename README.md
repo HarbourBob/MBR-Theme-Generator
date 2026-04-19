@@ -2,7 +2,7 @@
 
 **A browser-based WordPress theme scaffolding tool that produces secure, production-ready themes in seconds.**
 
-Version 1.5.0 | Built by [Robert Palmer](https://littlewebshack.com) | Free, no upsells, no premium tier
+Version 1.6.2 | Built by [Robert Palmer](https://littlewebshack.com) | Free, no upsells, no premium tier
 
 ---
 
