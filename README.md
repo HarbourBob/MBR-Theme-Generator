@@ -47,7 +47,7 @@ The generator shows a live preview of the theme's screenshot as you configure it
 
 ### Custom Screenshot Upload
 
-Prefer to ship your own screenshot? Click the preview area, upload a PNG or JPG (up to 2 MB, 1200x900 recommended). The upload replaces the auto-generated preview entirely and is preserved in the zip as screenshot.png or screenshot.jpg, bytes-for-bytes. Click Remove to revert to the auto-generated preview.
+Prefer to ship your own screenshot? Click the preview area, upload a PNG or JPG (up to 2 MB, 1200x900 recommended). The upload replaces the auto-generated preview entirely and is preserved in the zip as screenshot.png or screenshot.jpg, byte-for-byte. Click Remove to revert to the auto-generated preview.
 
 ### Save and Load Configurations
 
@@ -100,7 +100,7 @@ Block themes skip this section entirely -- they use the WordPress Site Editor in
 
 ### Block Theme Specifics
 
-For FSE themes the generator outputs:
+For FSE themes, the generator outputs:
 
 - **theme.json v3** with a full design-token system: 7-colour palette, 2 gradients, 3 font families, 5 fluid font sizes, 7-step spacing scale, layout widths, element styles, and block styles
 - **6 HTML templates**: index, single, page, archive, search, 404
@@ -148,8 +148,8 @@ Configurable security (defaults to on):
 Generator-side protections (the tool itself):
 
 - All user-entered values are sanitised before being written into the theme's PHP strings, HTML attributes, and CSS values, so a malformed input cannot break out of quotes or inject code
-- JSZip is loaded with Subresource Integrity (SRI) hashes, so if the CDN is compromised your browser refuses to execute a tampered script
-- Warnings when theme slug is empty or starts with a digit (both cause PHP activation errors)
+- JSZip is loaded with Subresource Integrity (SRI) hashes, so if the CDN is compromised, your browser refuses to execute a tampered script
+- Warnings when the theme slug is empty or starts with a digit (both cause PHP activation errors)
 
 ### Other Bits
 
@@ -207,7 +207,7 @@ Block themes follow the same principle with WordPress itself -- every design dec
 - **Enhanced Security Headers toggle** -- Permissions-Policy, upgrade-insecure-requests (default on)
 - **Disable XML-RPC toggle** -- previously unconditional, now configurable (default on)
 - **Subresource Integrity** on JSZip library load in the generator itself
-- **Generator-side input sanitisation** prevents malformed input from injecting into generated PHP/HTML/CSS
+- **Generator-side input sanitisation** prevents malformed input from being injected into generated PHP/HTML/CSS
 - **Slug validation warnings** for empty or digit-prefixed slugs (both cause PHP activation errors)
 
 ### 1.4.2
